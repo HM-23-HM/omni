@@ -2,7 +2,7 @@ websites:
   - https://www.jamaica-gleaner.com/business
   - https://www.jamaicaobserver.com/category/business/
 prompts:
-  ranking: |
+  rank: |
     Rank the headlines from most relevant to least relevant.
     The criteria are:
     - The headline is relevant to the real estate market. (highest priority)
