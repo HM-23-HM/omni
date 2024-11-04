@@ -35,12 +35,23 @@ const config = yaml.load(fileContents) as Config;
  * @param stage - The stage of the prompt to get
  * @returns The prompt for the given stage
  */
-export const getPrompt = (stage: PromptStage) => {
-  const prompt = config.prompts[stage];
-  if (!prompt) {
+const getInstruction = (stage: PromptStage) => {
+  const instruction = config.prompts[stage];
+  if (!instruction) {
     throw new Error(`Prompt for stage ${stage} not found`);
   }
-  return prompt;
+  return instruction;
+};
+
+/**
+ * Builds a prompt string by combining instruction and input with delimited content
+ * @param instruction - The instruction/task to perform
+ * @param content - The content to process, will be wrapped in triple backticks
+ * @returns Formatted prompt string
+ */
+export const buildPrompt = (stage: PromptStage, content: string): string => {
+    const instruction = getInstruction(stage);
+    return `${instruction}\n\`\`\`\n${content}\n\`\`\``;
 };
 
 export const sendPrompt = async (prompt: string): Promise<LlamaResponse> => {

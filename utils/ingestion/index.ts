@@ -1,6 +1,9 @@
 import puppeteer, { Browser } from 'puppeteer';
-import * as fs from 'fs/promises';
+import * as fsPromises from 'fs/promises';
 import * as path from 'path';
+import { Config } from '../ai/index.ts';    
+import * as fs from "fs";
+import * as yaml from "js-yaml";
 
 export interface RankedArticle {
     headline: string;
@@ -49,7 +52,7 @@ export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines:
         const topHeadlines = sortedHeadlines.slice(0, numHeadlines);
 
         const outputDir = path.join(process.cwd(), 'scraped-articles');
-        await fs.mkdir(outputDir, { recursive: true });
+        await fsPromises.mkdir(outputDir, { recursive: true });
 
         const scrapePromises = topHeadlines.map(async (headline) => {
             try {
@@ -62,7 +65,7 @@ export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines:
                     .trim();
 
                 const filePath = path.join(outputDir, `${safeFilename}.txt`);
-                await fs.writeFile(filePath, content, 'utf-8');
+                await fsPromises.writeFile(filePath, content, 'utf-8');
 
                 console.log(`Successfully scraped: ${headline.headline}`);
             } catch (error) {
@@ -76,4 +79,13 @@ export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines:
         console.error('Error in scrapeTopStories:', error);
         throw error;
     }
+}
+
+/**
+ * Get the websites to ingest from the config file
+ * @returns The list of websites to ingest
+ */
+export const getWebsitesToIngest = () => {
+    const config = yaml.load(fs.readFileSync("./config.yml", "utf8")) as Config;
+    return config.websites; 
 }
