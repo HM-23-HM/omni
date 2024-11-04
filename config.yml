@@ -1,0 +1,26 @@
+websites:
+  - https://www.jamaica-gleaner.com/business
+  - https://www.jamaicaobserver.com/category/business/
+prompts:
+  ranking: |
+    Rank the headlines from most relevant to least relevant.
+    The criteria are:
+    - The headline is relevant to the real estate market. (highest priority)
+    - The headline is relevant to the technology market. (medium priority)
+    - The headline is relevant to the stock market. (lowest priority)
+
+    Return an array of objects with the following properties:
+    - headline (type: string)
+    - priority (type: number)
+    - link (type: string)
+
+    The link should be the full URL to the article.
+  summarize: |
+    Summarize the content of this article.
+    Distill the content to the most important points. 
+    Each important point should be a bullet point and should be a sentence or two.
+    Be as dry and factual as possible.
+    Information that is pertinent to the following personas should be prioritized:
+    - Real estate professionals
+    - Technology entrepreneurs/investors
+    - Stock market investors

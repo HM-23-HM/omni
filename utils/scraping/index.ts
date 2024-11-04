@@ -2,10 +2,11 @@ import puppeteer, { Browser } from 'puppeteer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export interface RankedHeadline {
+export interface RankedArticle {
     headline: string;
     priority: number;
     link: string;
+    summary?: string;
 }
 
 
@@ -41,7 +42,7 @@ export async function closeBrowser() {
  * @param headlines - The list of ranked headlines.
  * @param numHeadlines - The number of headlines to scrape. Defaults to 3.
  */
-export async function scrapeTopStories(headlines: RankedHeadline[], numHeadlines: number = 3): Promise<void> {
+export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines: number = 3): Promise<void> {
     try {
         // Sort headlines by priority (assuming lower number means higher priority)
         const sortedHeadlines = headlines.sort((a, b) => a.priority - b.priority);
