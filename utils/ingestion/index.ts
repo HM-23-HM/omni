@@ -22,6 +22,11 @@ async function getBrowser(): Promise<Browser> {
     return browserInstance;
 }
 
+/**
+ * Get the HTML full page content from a given URL
+ * @param url - The URL to get the full page content from
+ * @returns The full page content
+ */
 export async function getFullPage(url: string) {
     const browser = await getBrowser();
     const page = await browser.newPage();

@@ -1,6 +1,11 @@
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import axiosClient from "../network/index.ts";
+import ollama from "ollama";
+import { chunkTextGenerator } from "../index.ts";
+
+const ollamaClient = ollama as any;
+const model = "mistral"
+
 
 export interface Config {
   websites: string[];
@@ -8,23 +13,26 @@ export interface Config {
     rank: string;
     summarize: string;
   };
+  higherOrderPrompts: {
+    chunksThenInstruction: string;
+  };
 }
 
 type PromptStage = "rank" | "summarize";
 
 interface LlamaResponse {
-    model: string;
-    created_at: string;
-    response: string;
-    done: boolean;
-    done_reason: string;
-    context: number[];
-    total_duration: number;
-    load_duration: number;
-    prompt_eval_count: number;
-    prompt_eval_duration: number;
-    eval_count: number;
-    eval_duration: number;
+  model: string;
+  created_at: string;
+  response: string;
+  done: boolean;
+  done_reason: string;
+  context: number[];
+  total_duration: number;
+  load_duration: number;
+  prompt_eval_count: number;
+  prompt_eval_duration: number;
+  eval_count: number;
+  eval_duration: number;
 }
 
 const fileContents = fs.readFileSync("./config.yml", "utf8");
@@ -43,24 +51,79 @@ const getInstruction = (stage: PromptStage) => {
   return instruction;
 };
 
+const formatPrompt = (header: string, content: string) => {
+  return `${header}\n\`\`\`\n${content}\n\`\`\``;
+}
+
 /**
  * Builds a prompt string by combining instruction and input with delimited content
  * @param instruction - The instruction/task to perform
  * @param content - The content to process, will be wrapped in triple backticks
  * @returns Formatted prompt string
  */
-export const buildPrompt = (stage: PromptStage, content: string): string => {
-    const instruction = getInstruction(stage);
-    return `${instruction}\n\`\`\`\n${content}\n\`\`\``;
+const buildPrompt = (stage: PromptStage, content: string): string => {
+  const instruction = getInstruction(stage);
+  return formatPrompt(instruction, content);
 };
 
-export const sendPrompt = async (prompt: string): Promise<LlamaResponse> => {
-    const response = await axiosClient.post("/", {
-        prompt,
-        model: "llama3.2",
-        temperature: 0.7,
-        max_tokens: 100,
-        stream: false
+export const sendPrompt = async (
+  stage: PromptStage,
+  content: string
+): Promise<string> => {
+  const higherOrderPrompt = config.higherOrderPrompts.chunksThenInstruction;
+  const messages = [{ role: "user", content: higherOrderPrompt }];
+  
+  const firstResponse = await ollamaClient.chat({
+    model,
+    messages: messages,
+    keep_alive: 240000
+  });
+  
+  // Add the response to our message history
+  messages.push(firstResponse.message);
+  
+  const value = firstResponse.message.content;
+  console.log({ value });
+
+  if (Number.parseInt(value) === 7) {
+    console.log("Proceeding with the next stage");
+
+    let index = 0;
+    for (const chunk of chunkTextGenerator(content, 8000)) {
+      console.log({ index, chunk });
+      // Add each chunk as a new message
+
+      const formattedChunk = formatPrompt(`CHUNK ${index}`, chunk);
+
+      messages.push({ role: "user", content: formattedChunk });
+
+      console.log({ messages });
+      
+      const response = await ollamaClient.chat({
+        model,
+        messages: messages, // Pass the full conversation history
+        keep_alive: 240000
+      });
+      messages.push(response.message);
+      
+      index++;
+    }
+
+    // Send instruction to llm
+    messages.push({ role: "user", content: getInstruction(stage) });
+
+    console.log({ finalMessages: messages });
+
+    const finalResponse = await ollamaClient.chat({
+      model,
+      messages: messages,
+      keep_alive: 240000
     });
-    return response.data;
+
+    return finalResponse.message.content;
+  } else { 
+    console.log("The instruction was not understood")
+  }
+
+  return "";
 };
