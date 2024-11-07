@@ -1,23 +1,45 @@
+import { parseJSON } from "ollama/src/utils.js";
 import { sendPrompt } from "./ai/index.ts";
 import { getFullPage, getWebsitesToIngest, RankedArticle, scrapeTopStories } from "./ingestion/index.ts";
+import { parseJsonString } from "./parsing/index.ts";
+import * as fsPromises from "fs/promises";
 
+
+/**
+ * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
+ * @param rankedArticles The list of ranked articles to summarize.
+ * @returns The list of ranked articles with summaries.
+ */
+const getSummaries = async (rankedArticles: RankedArticle[]): Promise<RankedArticle[]> => {
+    const topHeadlines = rankedArticles.filter(article => !!article.path);
+    const otherHeadlines = rankedArticles.filter(article => !article.path);
+
+    const headlinesWithSummaries: RankedArticle[] = [];
+
+    await Promise.all(topHeadlines.map(async (headline) => {
+        const pageContent = await fsPromises.readFile(headline.path!, 'utf-8');
+        const summary = await sendPrompt("summarize", pageContent);
+        headlinesWithSummaries.push({
+            ...headline,
+            summary
+        });
+    }));
+
+    return [...headlinesWithSummaries, ...otherHeadlines];
+}
 
 export const generateReport = async () => {
-    // Ingestion
     const websites = getWebsitesToIngest();
-    // for (const website of websites) {
-        const homePageContent = await getFullPage(websites[0]);
-        // Ranking
+    const sections: RankedArticle[] = [];
+    for (const website of websites) {
+        const homePageContent = await getFullPage(website);
         const llmResponse = await sendPrompt("rank", homePageContent);
-        const rankedArticles: RankedArticle[] = JSON.parse(llmResponse);
+        const rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
 
-        console.log({rankedArticles});
-
-        // Summarizing
-        await scrapeTopStories(rankedArticles);
-    // }
-
-    // Summarizing
+        const rankedArticlesWithPaths = await scrapeTopStories(rankedArticles);
+        const rankedArticlesWithSummaries = await getSummaries(rankedArticlesWithPaths);
+        sections.push(...rankedArticlesWithSummaries);
+    }
 
     // Exporting
 }

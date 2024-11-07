@@ -1,25 +1,25 @@
-import puppeteer, { Browser } from 'puppeteer';
-import * as fsPromises from 'fs/promises';
-import * as path from 'path';
-import { Config } from '../ai/index.ts';    
+import puppeteer, { Browser } from "puppeteer";
+import * as fsPromises from "fs/promises";
+import * as path from "path";
+import { Config } from "../ai/index.ts";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 
 export interface RankedArticle {
-    headline: string;
-    priority: number;
-    link: string;
-    summary?: string;
+  headline: string;
+  link: string;
+  path?: string;
+  priority: number;
+  summary?: string;
 }
-
 
 let browserInstance: Browser | null = null;
 
 async function getBrowser(): Promise<Browser> {
-    if (!browserInstance) {
-        browserInstance = await puppeteer.launch();
-    }
-    return browserInstance;
+  if (!browserInstance) {
+    browserInstance = await puppeteer.launch();
+  }
+  return browserInstance;
 }
 
 /**
@@ -28,62 +28,76 @@ async function getBrowser(): Promise<Browser> {
  * @returns The full page content
  */
 export async function getFullPage(url: string) {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    const pageContent = await page.content();
-    await page.close();
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+  const pageContent = await page.content();
+  await page.close();
 
-    return pageContent;
+  return pageContent;
 }
 
 export async function closeBrowser() {
-    if (browserInstance) {
-        await browserInstance.close();
-        browserInstance = null;
-    }
+  if (browserInstance) {
+    await browserInstance.close();
+    browserInstance = null;
+  }
 }
 
 /**
- * Scrape the top 3 headlines from the list of ranked headlines.
+ * Scrape the top headlines from the list of ranked headlines.
  * @param headlines - The list of ranked headlines.
  * @param numHeadlines - The number of headlines to scrape. Defaults to 3.
+ * @returns The list of ranked headlines with paths to the scraped articles.
  */
-export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines: number = 3): Promise<void> {
-    try {
-        // Sort headlines by priority (assuming lower number means higher priority)
-        const sortedHeadlines = headlines.sort((a, b) => a.priority - b.priority);
-        const topHeadlines = sortedHeadlines.slice(0, numHeadlines);
+export async function scrapeTopStories(
+  headlines: RankedArticle[],
+  numHeadlines: number = 3
+): Promise<RankedArticle[]> {
+  try {
+    const topHeadlines = headlines.filter(
+      (headline) => headline.priority <= numHeadlines
+    );
+    const otherHeadlines = headlines.filter(
+      (headline) => headline.priority > numHeadlines
+    );
 
-        const outputDir = path.join(process.cwd(), 'scraped-articles');
-        await fsPromises.mkdir(outputDir, { recursive: true });
+    const outputDir = path.join(process.cwd(), "scraped-articles");
+    await fsPromises.mkdir(outputDir, { recursive: true });
 
-        const scrapePromises = topHeadlines.map(async (headline) => {
-            try {
-                const content = await getFullPage(headline.link);
+    const headlinesWithPaths: RankedArticle[] = [];
 
-                const safeFilename = headline.headline
-                    .replace(/[^a-z0-9]/gi, '_')
-                    .toLowerCase()
-                    .replace(/_+/g, '_')
-                    .trim();
+    const scrapePromises = topHeadlines.map(async (headline) => {
+      try {
+        const content = await getFullPage(headline.link);
 
-                const filePath = path.join(outputDir, `${safeFilename}.txt`);
-                await fsPromises.writeFile(filePath, content, 'utf-8');
+        const safeFilename = headline.headline
+          .replace(/[^a-z0-9]/gi, "_")
+          .toLowerCase()
+          .replace(/_+/g, "_")
+          .trim();
 
-                console.log(`Successfully scraped: ${headline.headline}`);
-            } catch (error) {
-                console.error(`Failed to scrape ${headline.headline}:`, error);
-            }
+        const filePath = path.join(outputDir, `${safeFilename}.txt`);
+        headlinesWithPaths.push({
+          ...headline,
+          path: filePath,
         });
+        await fsPromises.writeFile(filePath, content, "utf-8");
 
-        await Promise.all(scrapePromises);
+        console.log(`Successfully scraped: ${headline.headline}`);
+      } catch (error) {
+        console.error(`Failed to scrape ${headline.headline}:`, error);
+      }
+    });
 
-    } catch (error) {
-        console.error('Error in scrapeTopStories:', error);
-        throw error;
-    }
+    await Promise.all(scrapePromises);
+    return [...headlinesWithPaths, ...otherHeadlines];
+
+  } catch (error) {
+    console.error("Error in scrapeTopStories:", error);
+    throw error;
+  }
 }
 
 /**
@@ -91,6 +105,6 @@ export async function scrapeTopStories(headlines: RankedArticle[], numHeadlines:
  * @returns The list of websites to ingest
  */
 export const getWebsitesToIngest = () => {
-    const config = yaml.load(fs.readFileSync("./config.yml", "utf8")) as Config;
-    return config.websites; 
-}
+  const config = yaml.load(fs.readFileSync("./config.yml", "utf8")) as Config;
+  return config.websites;
+};

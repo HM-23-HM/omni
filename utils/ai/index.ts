@@ -1,11 +1,8 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import ollama from "ollama";
-import { chunkTextGenerator } from "../index.ts";
-
-const ollamaClient = ollama as any;
-const model = "mistral"
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export interface Config {
   websites: string[];
@@ -19,21 +16,6 @@ export interface Config {
 }
 
 type PromptStage = "rank" | "summarize";
-
-interface LlamaResponse {
-  model: string;
-  created_at: string;
-  response: string;
-  done: boolean;
-  done_reason: string;
-  context: number[];
-  total_duration: number;
-  load_duration: number;
-  prompt_eval_count: number;
-  prompt_eval_duration: number;
-  eval_count: number;
-  eval_duration: number;
-}
 
 const fileContents = fs.readFileSync("./config.yml", "utf8");
 const config = yaml.load(fileContents) as Config;
@@ -70,60 +52,8 @@ export const sendPrompt = async (
   stage: PromptStage,
   content: string
 ): Promise<string> => {
-  const higherOrderPrompt = config.higherOrderPrompts.chunksThenInstruction;
-  const messages = [{ role: "user", content: higherOrderPrompt }];
-  
-  const firstResponse = await ollamaClient.chat({
-    model,
-    messages: messages,
-    keep_alive: 240000
-  });
-  
-  // Add the response to our message history
-  messages.push(firstResponse.message);
-  
-  const value = firstResponse.message.content;
-  console.log({ value });
-
-  if (Number.parseInt(value) === 7) {
-    console.log("Proceeding with the next stage");
-
-    let index = 0;
-    for (const chunk of chunkTextGenerator(content, 8000)) {
-      console.log({ index, chunk });
-      // Add each chunk as a new message
-
-      const formattedChunk = formatPrompt(`CHUNK ${index}`, chunk);
-
-      messages.push({ role: "user", content: formattedChunk });
-
-      console.log({ messages });
-      
-      const response = await ollamaClient.chat({
-        model,
-        messages: messages, // Pass the full conversation history
-        keep_alive: 240000
-      });
-      messages.push(response.message);
-      
-      index++;
-    }
-
-    // Send instruction to llm
-    messages.push({ role: "user", content: getInstruction(stage) });
-
-    console.log({ finalMessages: messages });
-
-    const finalResponse = await ollamaClient.chat({
-      model,
-      messages: messages,
-      keep_alive: 240000
-    });
-
-    return finalResponse.message.content;
-  } else { 
-    console.log("The instruction was not understood")
-  }
-
-  return "";
+  console.log({ length: content.length })
+  const prompt = buildPrompt(stage, content);
+  const result = await model.generateContent(prompt);
+  return result.response.text();
 };
