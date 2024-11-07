@@ -1,6 +1,6 @@
 websites:
-  - https://www.jamaica-gleaner.com/business
-  - https://www.jamaicaobserver.com/category/business/
+- https://www.jamaica-gleaner.com/business
+- https://www.jamaicaobserver.com/category/business/
 prompts:
   rank: |
     This is the home page for a newspaper website
@@ -21,18 +21,13 @@ prompts:
     The priorities should be in descending order. 
     The highest priority should be 1.
   summarize: |
-    Summarize the content of this article.
-    Distill the content to the most important points. 
-    Each important point should be a bullet point and should be a sentence or two.
-    Be as dry and factual as possible.
-    Information that is pertinent to the following personas should be prioritized:
-    - Real estate professionals
-    - Technology entrepreneurs/investors
-    - Stock market investors
-
-    Once that is completed, append a final paragraph that adds some historical context
-    and/or an explanation of why these points are important to the reader.
-    This section should be no greater than 4-6 sentences.
+    Objectively summarize the following text, extracting key 
+    financial and business information presented in a bulleted list. 
+    Prioritize facts relevant to real estate professionals and technology
+    entrepreneurs. 
+    Following the bulleted summary, provide a brief (4-6 sentences) objective 
+    analysis explaining the potential significance of these facts 
+    within the broader context of these industries.
 higherOrderPrompts:
   chunksThenInstruction: |
     I'm going to send you a series of chunks and then an instruction to execute on the combined chunks.
