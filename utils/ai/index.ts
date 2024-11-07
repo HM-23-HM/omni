@@ -50,10 +50,32 @@ const buildPrompt = (stage: PromptStage, content: string): string => {
 
 export const sendPrompt = async (
   stage: PromptStage,
-  content: string
+  content: string,
+  waitFor: number = 10, // default wait time in minutes
+  maxRetries: number = 3 // maximum number of retries
 ): Promise<string> => {
-  console.log({ length: content.length })
+  console.log({ length: content.length });
   const prompt = buildPrompt(stage, content);
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  let attempts = 0;
+
+  while (attempts < maxRetries) {
+    try {
+      if (attempts > 0) {
+        console.log(`Retrying...`);
+      }
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (err: any) {
+      if (err.status === 429) {
+        attempts++;
+        console.error(`429 Too Many Requests. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
+        await new Promise(resolve => setTimeout(resolve, waitFor * 60 * 1000));
+      } else {
+        console.error(err);
+        throw err;
+      }
+    }
+  }
+
+  throw new Error(`Failed to generate content after ${maxRetries} attempts due to 429 errors.`);
 };
