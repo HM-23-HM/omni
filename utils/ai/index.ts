@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
+import { CONFIG_FILE_PATH } from "../constants/index.ts";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -17,7 +18,7 @@ export interface Config {
 
 type PromptStage = "rank" | "summarize";
 
-const fileContents = fs.readFileSync("./config.yml", "utf8");
+const fileContents = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
 const config = yaml.load(fileContents) as Config;
 
 /**

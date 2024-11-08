@@ -1,3 +1,3 @@
 import { sendReport } from "./utils/index.ts";
 
-sendReport().then(console.log).catch(console.error);
+sendReport().catch(console.error);

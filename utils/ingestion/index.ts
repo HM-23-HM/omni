@@ -4,6 +4,7 @@ import * as path from "path";
 import { Config } from "../ai/index.ts";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
+import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
 
 export interface RankedArticle {
   headline: string;
@@ -59,7 +60,7 @@ export async function scrapeTopStories(
   headlines: RankedArticle[],
 ): Promise<RankedArticle[]> {
   try {
-    const outputDir = path.join(process.cwd(), "scraped-articles");
+    const outputDir = path.join(process.cwd(), SCRAPED_ARTICLES_DIR);
     await fsPromises.mkdir(outputDir, { recursive: true });
 
     const headlinesWithPaths: RankedArticle[] = [];
@@ -100,7 +101,7 @@ export async function scrapeTopStories(
  * @returns The list of websites to ingest
  */
 export const getWebsitesToIngest = () => {
-  const config = yaml.load(fs.readFileSync("./config.yml", "utf8")) as Config;
+  const config = yaml.load(fs.readFileSync(CONFIG_FILE_PATH, "utf8")) as Config;
   return config.websites;
 };
 

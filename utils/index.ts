@@ -11,6 +11,7 @@ import {
 } from "./ingestion/index.ts";
 import { parseJsonString } from "./parsing/index.ts";
 import * as path from "path";
+import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
@@ -39,7 +40,7 @@ const getSummaries = async (
 };
 
 const clearScrapedArticles = async () => {
-  const directory = path.join(process.cwd(), "scraped-articles");
+  const directory = path.join(process.cwd(), SCRAPED_ARTICLES_DIR);
   try {
     const files = await fsPromises.readdir(directory);
     for (const file of files) {
@@ -51,10 +52,19 @@ const clearScrapedArticles = async () => {
   }
 };
 
-export const sendReport = async () => {
+interface ProcessedArticles {
+  highPriority: RankedArticle[];
+  lowPriority: RankedArticle[];
+}
+
+/**
+ * Gathers articles from all configured websites
+ * @returns Raw articles separated by priority
+ */
+const gatherArticles = async (): Promise<ProcessedArticles> => {
   const websites = getWebsitesToIngest();
-  let allHighPriorityArticles: RankedArticle[] = [];
-  let allLowPriorityArticles: RankedArticle[] = [];
+  const allHighPriority: RankedArticle[] = [];
+  const allLowPriority: RankedArticle[] = [];
 
   for (const website of websites) {
     const homePageContent = await getFullPage(website);
@@ -63,18 +73,41 @@ export const sendReport = async () => {
 
     const { highPriority, lowPriority } = separateArticlesByPriority(
       rankedArticles,
-      2
+      HIGH_PRIORITY_COUNT
     );
-
-    const highPriorityWithPaths = await scrapeTopStories(highPriority);
-    const highPriorityWithSummaries = await getSummaries(highPriorityWithPaths);
-
-    allHighPriorityArticles.push(...highPriorityWithSummaries);
-    allLowPriorityArticles.push(...lowPriority);
+    
+    allHighPriority.push(...highPriority);
+    allLowPriority.push(...lowPriority);
   }
 
-  const highPriorityHtml = generateHtml(allHighPriorityArticles, "hp");
-  const lowPriorityHtml = generateHtml(allLowPriorityArticles, "lp");
+  return { 
+    highPriority: allHighPriority, 
+    lowPriority: allLowPriority 
+  };
+};
+
+/**
+ * Processes the gathered articles by scraping content and generating summaries
+ * @param articles The raw gathered articles
+ * @returns Processed articles with summaries
+ */
+const processArticles = async (articles: ProcessedArticles): Promise<ProcessedArticles> => {
+  const highPriorityWithPaths = await scrapeTopStories(articles.highPriority);
+  const highPriorityWithSummaries = await getSummaries(highPriorityWithPaths);
+
+  return {
+    highPriority: highPriorityWithSummaries,
+    lowPriority: articles.lowPriority
+  };
+};
+
+/**
+ * Generates and sends the final report
+ * @param articles The processed articles ready for reporting
+ */
+const generateReport = async (articles: ProcessedArticles): Promise<void> => {
+  const highPriorityHtml = generateHtml(articles.highPriority, "hp");
+  const lowPriorityHtml = generateHtml(articles.lowPriority, "lp");
 
   const combinedHtml = `
     <div class="high-priority-section">
@@ -85,12 +118,22 @@ export const sendReport = async () => {
     </div>
   `;
 
-  await sendEmail(combinedHtml)
-    .then(() => console.log("Email sent"))
-    .catch(console.error);
+  await sendEmail(combinedHtml);
+};
 
-  // Clean up
-  await closeBrowser();
-  await clearScrapedArticles();
+export const sendReport = async (): Promise<void> => {
+  try {
+    const gatheredArticles = await gatherArticles();
+    const processedArticles = await processArticles(gatheredArticles);
+    await generateReport(processedArticles);
+    console.log("Email sent successfully");
+  } catch (error) {
+    console.error("Error sending report:", error);
+    throw error;
+  } finally {
+    // Clean up
+    await closeBrowser();
+    await clearScrapedArticles();
+  }
 };
 
