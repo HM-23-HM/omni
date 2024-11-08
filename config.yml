@@ -29,5 +29,14 @@ prompts:
     Following the bulleted summary, provide a brief (4-6 sentences) objective 
     analysis explaining the potential significance of these facts 
     within the broader context of these industries.
-    Your response should be formatted in HTML.
+    
+    Formatting instructions:
+    - Your response should be formatted in HTML.
+    - The summary and analysis should be formatted as unordered lists <ul> and <li> tags.
+    - Use <b> tags to highlight important words instead of '**'
+    - The summary and analysis will be placed in a <p> tag, so do not include
+      tags like <html>, <body>, <!DOCTYPE html>, or <head> in your response.
+    - Omit the word 'html' at the beginning of the response. The entire response
+      should be valid html.
+    
 
