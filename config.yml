@@ -22,17 +22,12 @@ prompts:
     The highest priority should be 1.
   summarize: |
     Objectively summarize the following text, extracting key 
-    financial and business information presented in a bulleted list. 
+    financial and business information presented in a bulleted list.
+    Each point should be separated by a new line.
     Prioritize facts relevant to real estate professionals and technology
     entrepreneurs. 
     Following the bulleted summary, provide a brief (4-6 sentences) objective 
     analysis explaining the potential significance of these facts 
     within the broader context of these industries.
-higherOrderPrompts:
-  chunksThenInstruction: |
-    I'm going to send you a series of chunks and then an instruction to execute on the combined chunks.
-    The chunks will begin with a header like "CHUNK <number>"
-    When you receive the chunks, append them to the previous chunk. Your response should only be "Chunk <number> received".
-    The combined chunks will be referred to as "content"
-    The instruction will be sent once all the chunks have been uploaded. The instruction should be executed on the "content"
-    If you understand, simply respond with the number 7.
+    Your response should be formatted in HTML.
+
