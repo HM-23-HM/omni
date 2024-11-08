@@ -19,10 +19,14 @@ export const generateHtml = (sections: RankedArticle[]): string => {
 
 export const sendEmail = async (html: string) => {
   const transporter = nodemailer.createTransport({
-    service: "outlook",
+    service: "gmail",
     auth: {
+      type: "OAuth2",
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
+      clientId: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      refreshToken: process.env.OAUTH2_REFRESH_TOKEN,
+      accessToken: process.env.OAUTH2_ACCESS_TOKEN,
     },
   });
 
