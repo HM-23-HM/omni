@@ -10,6 +10,7 @@ import {
   separateArticlesByPriority,
 } from "./ingestion/index.ts";
 import { parseJsonString } from "./parsing/index.ts";
+import * as path from "path";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
@@ -35,6 +36,19 @@ const getSummaries = async (
   }
 
   return headlinesWithSummaries;
+};
+
+const clearScrapedArticles = async () => {
+  const directory = path.join(process.cwd(), "scraped-articles");
+  try {
+    const files = await fsPromises.readdir(directory);
+    for (const file of files) {
+      await fsPromises.unlink(path.join(directory, file));
+    }
+    console.log("Cleared scraped-articles directory");
+  } catch (error) {
+    console.error("Error clearing scraped-articles directory:", error);
+  }
 };
 
 export const sendReport = async () => {
@@ -77,5 +91,6 @@ export const sendReport = async () => {
 
   // Clean up
   await closeBrowser();
+  await clearScrapedArticles();
 };
 
