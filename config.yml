@@ -38,5 +38,6 @@ prompts:
       tags like <html>, <body>, <!DOCTYPE html>, or <head> in your response.
     - Omit the word 'html' at the beginning of the response. The entire response
       should be valid html.
+    - The analysis section should begin with the word 'Analysis:'
     
 

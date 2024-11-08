@@ -28,14 +28,19 @@ async function getBrowser(): Promise<Browser> {
  * @returns The full page content
  */
 export async function getFullPage(url: string) {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
+  try {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
 
-  await page.goto(url, { waitUntil: "domcontentloaded" });
-  const pageContent = await page.content();
-  await page.close();
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    const pageContent = await page.content();
+    await page.close();
 
-  return pageContent;
+    return pageContent;
+  } catch (error) {
+    console.error(`An error occurred while getting the full page: ${error}`);
+    throw error;
+  }
 }
 
 export async function closeBrowser() {
@@ -48,27 +53,18 @@ export async function closeBrowser() {
 /**
  * Scrape the top headlines from the list of ranked headlines.
  * @param headlines - The list of ranked headlines.
- * @param numHeadlines - The number of headlines to scrape. Defaults to 3.
  * @returns The list of ranked headlines with paths to the scraped articles.
  */
 export async function scrapeTopStories(
   headlines: RankedArticle[],
-  numHeadlines: number = 3
 ): Promise<RankedArticle[]> {
   try {
-    const topHeadlines = headlines.filter(
-      (headline) => headline.priority <= numHeadlines
-    );
-    const otherHeadlines = headlines.filter(
-      (headline) => headline.priority > numHeadlines
-    );
-
     const outputDir = path.join(process.cwd(), "scraped-articles");
     await fsPromises.mkdir(outputDir, { recursive: true });
 
     const headlinesWithPaths: RankedArticle[] = [];
 
-    const scrapePromises = topHeadlines.map(async (headline) => {
+    const scrapePromises = headlines.map(async (headline) => {
       try {
         const content = await getFullPage(headline.link);
 
@@ -92,8 +88,7 @@ export async function scrapeTopStories(
     });
 
     await Promise.all(scrapePromises);
-    return [...headlinesWithPaths, ...otherHeadlines];
-
+    return headlinesWithPaths;
   } catch (error) {
     console.error("Error in scrapeTopStories:", error);
     throw error;
@@ -108,3 +103,13 @@ export const getWebsitesToIngest = () => {
   const config = yaml.load(fs.readFileSync("./config.yml", "utf8")) as Config;
   return config.websites;
 };
+
+export function separateArticlesByPriority(articles: RankedArticle[], numHighPriority: number = 3): {
+  highPriority: RankedArticle[];
+  lowPriority: RankedArticle[];
+} {
+  return {
+    highPriority: articles.filter((article) => article.priority <= numHighPriority),
+    lowPriority: articles.filter((article) => article.priority > numHighPriority)
+  };
+}
