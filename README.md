@@ -10,13 +10,11 @@ Omni aggregates news from various sources and generates concise summaries. It's 
 
 - News aggregation from multiple sources
 - Automated article summarization
-- Customizable news feeds
+
 
 ## Tech Stack
 
 - Node.js
-
-- REST API
 
 ## Setup
 
