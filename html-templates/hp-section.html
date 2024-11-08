@@ -1,0 +1,11 @@
+{{#each sections}}
+<article class="article-preview">
+  <h2 class="article-title">
+    <a href="{{link}}">{{headline}}</a>
+  </h2>
+  
+  {{#if summary}}
+  <p class="article-summary">{{summary}}</p>
+  {{/if}}
+</article>
+{{/each}}

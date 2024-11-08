@@ -8,13 +8,13 @@ import Mail from "nodemailer/lib/mailer/index.js";
 /**
  * Generates an HTML string from a list of ranked articles.
  * @param sections The list of ranked articles.
+ * @param priority The priority of the section. High priority (hp) or low priority (lp).
  * @returns The HTML string.
  */
-export const generateHtml = (sections: RankedArticle[]): string => {
-  const template = fs.readFileSync(path.join(process.cwd(), "./html-templates/section.html"), "utf8");
+export const generateHtml = (sections: RankedArticle[], priority: "hp" | "lp"): string => {
+  const template = fs.readFileSync(path.join(process.cwd(), `./html-templates/${priority}-section.html`), "utf8");
   const compiledTemplate = handlebars.compile(template);
-  const htmlSections = sections.map((section) => compiledTemplate(section));
-  return htmlSections.join("");
+  return compiledTemplate({ sections });
 };
 
 export const sendEmail = async (html: string) => {
