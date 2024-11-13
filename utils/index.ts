@@ -105,7 +105,7 @@ const processArticles = async (articles: ProcessedArticles): Promise<ProcessedAr
  * Generates and sends the final report
  * @param articles The processed articles ready for reporting
  */
-const generateReport = async (articles: ProcessedArticles): Promise<void> => {
+const generateAndSendEmail = async (articles: ProcessedArticles): Promise<void> => {
   const highPriorityHtml = generateHtml(articles.highPriority, "hp");
   const lowPriorityHtml = generateHtml(articles.lowPriority, "lp");
 
@@ -121,11 +121,11 @@ const generateReport = async (articles: ProcessedArticles): Promise<void> => {
   await sendEmail(combinedHtml);
 };
 
-export const sendReport = async (): Promise<void> => {
+export const sendDailyReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
     const processedArticles = await processArticles(gatheredArticles);
-    await generateReport(processedArticles);
+    await generateAndSendEmail(processedArticles);
     console.log("Email sent successfully");
   } catch (error) {
     console.error("Error sending report:", error);
