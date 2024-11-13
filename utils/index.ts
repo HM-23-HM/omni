@@ -4,7 +4,7 @@ import { generateHtml, sendEmail } from "./email/index.ts";
 import {
   closeBrowser,
   getFullPage,
-  getWebsitesToIngest,
+  getDailySourcesToIngest,
   RankedArticle,
   scrapeTopStories,
   separateArticlesByPriority,
@@ -29,7 +29,7 @@ const getSummaries = async (
       path: headline.path,
       length: pageContent.length,
     });
-    const summary = await sendPrompt("summarize", pageContent);
+    const summary = await sendPrompt("summarize", pageContent, "NEWSPAPERS", "DAILY");
     headlinesWithSummaries.push({
       ...headline,
       summary,
@@ -61,14 +61,14 @@ interface ProcessedArticles {
  * Gathers articles from all configured websites
  * @returns Raw articles separated by priority
  */
-const gatherArticles = async (): Promise<ProcessedArticles> => {
-  const websites = getWebsitesToIngest();
+const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
+  const websites = getDailySourcesToIngest("NEWSPAPERS");
   const allHighPriority: RankedArticle[] = [];
   const allLowPriority: RankedArticle[] = [];
 
   for (const website of websites) {
     const homePageContent = await getFullPage(website);
-    const llmResponse = await sendPrompt("rank", homePageContent);
+    const llmResponse = await sendPrompt("rank", homePageContent, "NEWSPAPERS", "DAILY");
     const rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
 
     const { highPriority, lowPriority } = separateArticlesByPriority(
@@ -123,7 +123,7 @@ const generateReport = async (articles: ProcessedArticles): Promise<void> => {
 
 export const sendReport = async (): Promise<void> => {
   try {
-    const gatheredArticles = await gatherArticles();
+    const gatheredArticles = await getNewspaperArticles();
     const processedArticles = await processArticles(gatheredArticles);
     await generateReport(processedArticles);
     console.log("Email sent successfully");

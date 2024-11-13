@@ -6,28 +6,53 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export interface Config {
-  websites: string[];
-  prompts: {
-    rank: string;
-    summarize: string;
+  FREQUENCY: {
+    DAILY: {
+      NEWSPAPERS: string[];
+      STOCK: string[];
+      JAMSTOCKEX: string[];
+    };
+    DAY_OF_WEEK: {
+      TUESDAY: string[];
+    };
+    WEEKLY: string[];
+    MONTHLY: string[];
+    QUARTERLY: string[];
   };
-  higherOrderPrompts: {
-    chunksThenInstruction: string;
+  STOCKS: string[];
+  prompts: {
+    DAILY: {
+      NEWSPAPERS: {
+        rank: string;
+        summarize?: string;
+      };
+      JAMSTOCKEX: {
+        rank: string;
+        summarize?: string;
+      };
+      STOCK: {
+        rank: string;
+        summarize?: string;
+      };
+    };
   };
 }
+
+type Frequency = "DAILY" | "DAY_OF_WEEK" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
+type SourceType = "NEWSPAPERS" | "JAMSTOCKEX" | "STOCK";
 
 type PromptStage = "rank" | "summarize";
 
 const fileContents = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
 const config = yaml.load(fileContents) as Config;
 
-/**
- * Get the prompt for a given stage from the config file
- * @param stage - The stage of the prompt to get
- * @returns The prompt for the given stage
- */
-const getInstruction = (stage: PromptStage) => {
-  const instruction = config.prompts[stage];
+    /**
+     * Get the prompt for a given stage from the config file
+     * @param stage - The stage of the prompt to get
+     * @returns The prompt for the given stage
+     */
+    const getInstruction = (stage: PromptStage, type: SourceType, frequency: Frequency = "DAILY") => {
+  const instruction = config.prompts.DAILY[type][stage]  ;
   if (!instruction) {
     throw new Error(`Prompt for stage ${stage} not found`);
   }
@@ -44,19 +69,21 @@ const formatPrompt = (header: string, content: string) => {
  * @param content - The content to process, will be wrapped in triple backticks
  * @returns Formatted prompt string
  */
-const buildPrompt = (stage: PromptStage, content: string): string => {
-  const instruction = getInstruction(stage);
+const buildPrompt = (stage: PromptStage, content: string, type: SourceType, frequency: Frequency = "DAILY"): string => {
+  const instruction = getInstruction(stage, type, frequency);
   return formatPrompt(instruction, content);
 };
 
 export const sendPrompt = async (
   stage: PromptStage,
   content: string,
+  type: SourceType,
+  frequency: Frequency = "DAILY",
   waitFor: number = 10, // default wait time in minutes
   maxRetries: number = 3 // maximum number of retries
 ): Promise<string> => {
   console.log({ length: content.length });
-  const prompt = buildPrompt(stage, content);
+  const prompt = buildPrompt(stage, content, type, frequency);
   let attempts = 0;
 
   while (attempts < maxRetries) {

@@ -5,6 +5,7 @@ import { Config } from "../ai/index.ts";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
+import { populateDateUrl } from "../parsing/index.ts";
 
 export interface RankedArticle {
   headline: string;
@@ -96,13 +97,17 @@ export async function scrapeTopStories(
   }
 }
 
+export type Frequency = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
+
 /**
  * Get the websites to ingest from the config file
  * @returns The list of websites to ingest
  */
-export const getWebsitesToIngest = () => {
+export const getDailySourcesToIngest = (
+  type: "NEWSPAPERS" | "STOCK" | "JAMSTOCKEX" = "NEWSPAPERS",
+) => {
   const config = yaml.load(fs.readFileSync(CONFIG_FILE_PATH, "utf8")) as Config;
-  return config.websites;
+  return config.FREQUENCY.DAILY[type].map(populateDateUrl);
 };
 
 export function separateArticlesByPriority(articles: RankedArticle[], numHighPriority: number = 3): {
