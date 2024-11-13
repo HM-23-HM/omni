@@ -27,7 +27,7 @@ STOCKS: &STOCKS
 prompts:
     DAILY:
       NEWSPAPERS:
-        rank: |
+        ingest: |
           This is the home page for a newspaper website
           First, pick out the headlines for the different news stories. 
           Once you have isolated the headlines, rank them from most relevant to least relevant.
@@ -65,7 +65,7 @@ prompts:
             should be valid html.
           - The analysis section should begin with the word 'Analysis:'
       JAMSTOCKEX: 
-        rank: |
+        ingest: |
           This is the home page for a stock exchange website
           First, pick out the headlines for the different news stories. 
           Once you have isolated the headlines, filter them for the list of stocks being monitored.
@@ -78,7 +78,7 @@ prompts:
 
           The link should be the full URL to the article.
       STOCK: 
-        rank: |
+        ingest: |
           Extract the following information from this page:
           - Instrument name
           - Today's range

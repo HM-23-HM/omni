@@ -23,15 +23,15 @@ export interface Config {
   prompts: {
     DAILY: {
       NEWSPAPERS: {
-        rank: string;
+        ingest: string;
         summarize?: string;
       };
       JAMSTOCKEX: {
-        rank: string;
+        ingest: string;
         summarize?: string;
       };
       STOCK: {
-        rank: string;
+        ingest: string;
         summarize?: string;
       };
     };
@@ -41,7 +41,7 @@ export interface Config {
 type Frequency = "DAILY" | "DAY_OF_WEEK" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
 type SourceType = "NEWSPAPERS" | "JAMSTOCKEX" | "STOCK";
 
-type PromptStage = "rank" | "summarize";
+type PromptStage = "ingest" | "summarize";
 
 const fileContents = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
 const config = yaml.load(fileContents) as Config;

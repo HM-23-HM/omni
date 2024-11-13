@@ -68,7 +68,7 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
 
   for (const website of websites) {
     const homePageContent = await getFullPage(website);
-    const llmResponse = await sendPrompt("rank", homePageContent, "NEWSPAPERS", "DAILY");
+    const llmResponse = await sendPrompt("ingest", homePageContent, "NEWSPAPERS", "DAILY");
     const rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
 
     const { highPriority, lowPriority } = separateArticlesByPriority(
