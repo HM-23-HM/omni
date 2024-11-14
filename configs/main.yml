@@ -85,6 +85,6 @@ prompts:
           - Volume traded
 
           Return an object with the following properties and nothing else:
-          - Instrument name (type: string)
-          - Today's range (type: string)
-          - Volume traded (type: number)
+          - ticker (type: string) # The ticker symbol for the stock
+          - range (type: string) # The range of the stock for the day
+          - volume (type: number) # The volume of the stock traded for the day

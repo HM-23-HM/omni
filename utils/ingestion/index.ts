@@ -7,6 +7,12 @@ import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
 import { populateDateUrl } from "../parsing/index.ts";
 
+export interface StockData {
+  ticker: string;
+  range: string;
+  volume: number;
+}
+
 export interface ArticleSource {
   headline: string;
   link: string;

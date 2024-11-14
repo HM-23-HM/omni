@@ -1,6 +1,6 @@
 import * as fsPromises from "fs/promises";
 import { sendPrompt } from "./ai/index.ts";
-import { generateDailyNewsHtml, generateJamstockexHtml, sendEmail } from "./email/index.ts";
+import { generateDailyNewsHtml, generateDailyJamstockexHtml, sendEmail, generateDailyStockSummaryHtml } from "./email/index.ts";
 import {
   closeBrowser,
   getFullPage,
@@ -9,6 +9,7 @@ import {
   scrapeTopStories,
   separateArticlesByPriority,
   ArticleSource,
+  StockData,
 } from "./ingestion/index.ts";
 import { parseJsonString } from "./parsing/index.ts";
 import * as path from "path";
@@ -99,6 +100,14 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   return rankedArticles;
 }
 
+const getDailyStockSummaries = async (): Promise<StockData[]> => {
+  const url = getDailySourcesToIngest("STOCK")[0];
+  const pageContent = await getFullPage(url);
+  const llmResponse = await sendPrompt("ingest", pageContent, "STOCK", "DAILY");
+  const rankedArticles: StockData[] = parseJsonString(llmResponse);
+  return rankedArticles;
+}
+
 /**
  * Processes the gathered articles by scraping content and generating summaries
  * @param articles The raw gathered articles
@@ -118,10 +127,11 @@ const processArticles = async (articles: ProcessedArticles): Promise<ProcessedAr
  * Generates and sends the final report
  * @param newspaperSection The processed articles ready for reporting
  */
-const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstockexLinks: ArticleSource[]): Promise<void> => {
+const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstockexLinks: ArticleSource[], stockSummaries: StockData[]): Promise<void> => {
   const highPriorityHtml = generateDailyNewsHtml(newspaperSection.highPriority, "hp");
   const lowPriorityHtml = generateDailyNewsHtml(newspaperSection.lowPriority, "lp");
-  const jamstockexHtml = generateJamstockexHtml(jamstockexLinks);
+  const jamstockexHtml = generateDailyJamstockexHtml(jamstockexLinks);
+  const stockSummaryHtml = generateDailyStockSummaryHtml(stockSummaries);
 
   const combinedHtml = `
     <div class="high-priority-section">
@@ -131,6 +141,10 @@ const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstoc
     <div class="jamstockex-section">
       <h2>Jamstockex</h2>
       ${jamstockexHtml}
+    </div>
+    <div class="stock-summary-section">
+      <h2>Stock Summary</h2>
+      ${stockSummaryHtml}
     </div>
     <div class="low-priority-section">
       <h2>Newspapers (Low Priority)</h2>
@@ -145,8 +159,12 @@ export const sendDailyReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
     const processedArticles = await processArticles(gatheredArticles);
+    console.log("Processed articles");
     const jamstockexLinks = await getJamstockexDailyLinks();
-    await generateAndSendEmail(processedArticles, jamstockexLinks);
+    console.log("Jamstockex links fetched");
+    const stockSummaries = await getDailyStockSummaries();
+    console.log("Stock summaries fetched");
+    await generateAndSendEmail(processedArticles, jamstockexLinks, stockSummaries);
     console.log("Email sent successfully");
   } catch (error) {
     console.error("Error sending report:", error);

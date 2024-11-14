@@ -1,10 +1,10 @@
-import { ArticleSource, RankedArticle } from "../ingestion/index.ts";
 import * as fs from "fs";
-import * as path from "path";
-import handlebars, { template } from "handlebars";
+import { google } from "googleapis";
+import handlebars from "handlebars";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer/index.js";
-import { google } from "googleapis";
+import * as path from "path";
+import { ArticleSource, RankedArticle, StockData } from "../ingestion/index.ts";
 
 const lpTemplate = fs.readFileSync(
   path.join(process.cwd(), `./html-templates/lp-section.html`),
@@ -12,6 +12,10 @@ const lpTemplate = fs.readFileSync(
 );
 const hpTemplate = fs.readFileSync(
   path.join(process.cwd(), `./html-templates/hp-section.html`),
+  "utf8"
+);
+const stockSummaryTemplate = fs.readFileSync(
+  path.join(process.cwd(), `./html-templates/daily/stock-summary.html`),
   "utf8"
 );
 
@@ -52,10 +56,17 @@ export const generateDailyNewsHtml = (
   return compiledTemplate({ sections });
 };
 
-export const generateJamstockexHtml = (
+export const generateDailyJamstockexHtml = (
   sections: ArticleSource[],
 ): string => {
   const compiledTemplate = handlebars.compile(lpTemplate);
+  return compiledTemplate({ sections });
+};
+
+export const generateDailyStockSummaryHtml = (
+  sections: StockData[],
+): string => {
+  const compiledTemplate = handlebars.compile(stockSummaryTemplate);
   return compiledTemplate({ sections });
 };
 

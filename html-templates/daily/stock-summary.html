@@ -1,0 +1,18 @@
+<table border="1" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr>
+      <th style="padding: 8px; text-align: left;">Ticker</th>
+      <th style="padding: 8px; text-align: left;">Range</th>
+      <th style="padding: 8px; text-align: right;">Volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each this}}
+    <tr>
+      <td style="padding: 8px;">{{ticker}}</td>
+      <td style="padding: 8px;">{{range}}</td>
+      <td style="padding: 8px; text-align: right;">{{volume}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
