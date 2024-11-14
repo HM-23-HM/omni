@@ -7,6 +7,11 @@ import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
 import { populateDateUrl } from "../parsing/index.ts";
 
+export interface ArticleSource {
+  headline: string;
+  link: string;
+}
+
 export interface RankedArticle {
   headline: string;
   link: string;

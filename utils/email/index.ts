@@ -1,10 +1,19 @@
-import { RankedArticle } from "../ingestion/index.ts";
+import { ArticleSource, RankedArticle } from "../ingestion/index.ts";
 import * as fs from "fs";
 import * as path from "path";
-import handlebars from "handlebars";
+import handlebars, { template } from "handlebars";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer/index.js";
 import { google } from "googleapis";
+
+const lpTemplate = fs.readFileSync(
+  path.join(process.cwd(), `./html-templates/lp-section.html`),
+  "utf8"
+);
+const hpTemplate = fs.readFileSync(
+  path.join(process.cwd(), `./html-templates/hp-section.html`),
+  "utf8"
+);
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -34,15 +43,19 @@ const getAccessToken = async (): Promise<string> => {
  * @param priority The priority of the section. High priority (hp) or low priority (lp).
  * @returns The HTML string.
  */
-export const generateHtml = (
+export const generateDailyNewsHtml = (
   sections: RankedArticle[],
   priority: "hp" | "lp"
 ): string => {
-  const template = fs.readFileSync(
-    path.join(process.cwd(), `./html-templates/${priority}-section.html`),
-    "utf8"
-  );
+  const template = priority === "hp" ? hpTemplate : lpTemplate;
   const compiledTemplate = handlebars.compile(template);
+  return compiledTemplate({ sections });
+};
+
+export const generateJamstockexHtml = (
+  sections: ArticleSource[],
+): string => {
+  const compiledTemplate = handlebars.compile(lpTemplate);
   return compiledTemplate({ sections });
 };
 
