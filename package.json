@@ -15,12 +15,14 @@
     "googleapis": "^144.0.0",
     "handlebars": "^4.7.8",
     "js-yaml": "^4.1.0",
+    "jsdom": "^25.0.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "puppeteer": "^23.6.1"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
+    "@types/jsdom": "^21.1.7",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.16",
     "ts-node": "^10.9.2",

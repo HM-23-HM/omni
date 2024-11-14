@@ -11,7 +11,7 @@ import {
   ArticleSource,
   StockData,
 } from "./ingestion/index.ts";
-import { parseJsonString } from "./parsing/index.ts";
+import { cleanDailyJamstockexHtml, parseJamStockexDaily, parseJsonString, parseStockData } from "./parsing/index.ts";
 import * as path from "path";
 import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
 
@@ -20,7 +20,7 @@ import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts"
  * @param hpArticles The list of high priority ranked articles to summarize.
  * @returns The list of ranked articles with summaries.
  */
-const getSummaries = async (
+const getNewspaperSummaries = async (
   hpArticles: RankedArticle[]
 ): Promise<RankedArticle[]> => {
   const headlinesWithSummaries: RankedArticle[] = [];
@@ -95,17 +95,21 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
 const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
   const pageContent = await getFullPage(url);
-  const llmResponse = await sendPrompt("ingest", pageContent, "JAMSTOCKEX", "DAILY");
-  const rankedArticles: ArticleSource[] = parseJsonString(llmResponse);
-  return rankedArticles;
+  const parsedData = parseJamStockexDaily(pageContent);
+  return parsedData;
 }
 
-const getDailyStockSummaries = async (): Promise<StockData[]> => {
-  const url = getDailySourcesToIngest("STOCK")[0];
-  const pageContent = await getFullPage(url);
-  const llmResponse = await sendPrompt("ingest", pageContent, "STOCK", "DAILY");
-  const rankedArticles: StockData[] = parseJsonString(llmResponse);
-  return rankedArticles;
+export const getDailyStockSummaries = async (): Promise<StockData[]> => {
+  const urls = getDailySourcesToIngest("STOCK");
+  const stockSummaries: StockData[] = [];
+  for (const [index, url] of urls.entries()) {
+    const pageContent = await getFullPage(url);
+    await savePageContent(`stock-${index}.html`, pageContent);
+    const parsedContent = parseStockData(pageContent);
+    await savePageContent(`stock-${index}-parsed.json`, JSON.stringify(parsedContent));
+    stockSummaries.push(parsedContent);
+  }
+  return stockSummaries;
 }
 
 /**
@@ -113,9 +117,9 @@ const getDailyStockSummaries = async (): Promise<StockData[]> => {
  * @param articles The raw gathered articles
  * @returns Processed articles with summaries
  */
-const processArticles = async (articles: ProcessedArticles): Promise<ProcessedArticles> => {
+const processNewspaperArticles = async (articles: ProcessedArticles): Promise<ProcessedArticles> => {
   const highPriorityWithPaths = await scrapeTopStories(articles.highPriority);
-  const highPriorityWithSummaries = await getSummaries(highPriorityWithPaths);
+  const highPriorityWithSummaries = await getNewspaperSummaries(highPriorityWithPaths);
 
   return {
     highPriority: highPriorityWithSummaries,
@@ -128,44 +132,74 @@ const processArticles = async (articles: ProcessedArticles): Promise<ProcessedAr
  * @param newspaperSection The processed articles ready for reporting
  */
 const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstockexLinks: ArticleSource[], stockSummaries: StockData[]): Promise<void> => {
-  const highPriorityHtml = generateDailyNewsHtml(newspaperSection.highPriority, "hp");
-  const lowPriorityHtml = generateDailyNewsHtml(newspaperSection.lowPriority, "lp");
+  const newspaperHpHtml = generateDailyNewsHtml(newspaperSection.highPriority, "hp");
+  console.log('Generated newspaper high priority html');
+  const newspaperLpHtml = generateDailyNewsHtml(newspaperSection.lowPriority, "lp");
+  console.log('Generated newspaper low priority html');
   const jamstockexHtml = generateDailyJamstockexHtml(jamstockexLinks);
+  console.log('Generated jamstockex html');
   const stockSummaryHtml = generateDailyStockSummaryHtml(stockSummaries);
+  console.log('Generated stock summary html');
 
   const combinedHtml = `
-    <div class="high-priority-section">
-      <h2>Newspapers (High Priority)</h2>
-      ${highPriorityHtml}
+    <div class="newspaper-section">
+      <h2>Newspaper - High Priority</h2>
+      ${newspaperHpHtml}
     </div>
     <div class="jamstockex-section">
-      <h2>Jamstockex</h2>
+      <h2>Jamstockex Daily</h2>
       ${jamstockexHtml}
     </div>
     <div class="stock-summary-section">
-      <h2>Stock Summary</h2>
+      <h2>JSE Stock Summary</h2>
       ${stockSummaryHtml}
     </div>
-    <div class="low-priority-section">
-      <h2>Newspapers (Low Priority)</h2>
-      ${lowPriorityHtml}
+    <div class="newspaper-section">
+      <h2>Newspaper - Low Priority</h2>
+      ${newspaperLpHtml}
     </div>
   `;
 
+  // Save the combined HTML to a file
+  await savePageContent('daily-report.html', combinedHtml);
+
   await sendEmail(combinedHtml);
+};
+
+const savePageContent = async (filename: string, content: string): Promise<void> => {
+  try {
+    const directory = path.join(process.cwd(), 'page-content');
+    // Ensure directory exists
+    await fsPromises.mkdir(directory, { recursive: true });
+    
+    // Determine file extension based on content type
+    const extension = content.trim().startsWith('<') ? '.html' : '.txt';
+    const fullFilename = filename.includes('.') ? filename : `${filename}${extension}`;
+    
+    const filePath = path.join(directory, fullFilename);
+    await fsPromises.writeFile(filePath, content, 'utf-8');
+    console.log(`Saved content to ${filePath}`);
+  } catch (error) {
+    console.error(`Error saving content to file: ${error}`);
+    throw error;
+  }
 };
 
 export const sendDailyReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
-    const processedArticles = await processArticles(gatheredArticles);
+    const processedArticles = await processNewspaperArticles(gatheredArticles);
     console.log("Processed articles");
+
     const jamstockexLinks = await getJamstockexDailyLinks();
     console.log("Jamstockex links fetched");
+
     const stockSummaries = await getDailyStockSummaries();
     console.log("Stock summaries fetched");
+
     await generateAndSendEmail(processedArticles, jamstockexLinks, stockSummaries);
     console.log("Email sent successfully");
+
   } catch (error) {
     console.error("Error sending report:", error);
     throw error;

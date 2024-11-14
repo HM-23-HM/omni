@@ -1,4 +1,3 @@
-import cron from 'node-cron';
 import { sendDailyReport } from "./utils/index.ts";
 
 // Schedule the job to run at 11:30 AM UTC-5 (16:30 UTC)
@@ -13,6 +12,7 @@ import { sendDailyReport } from "./utils/index.ts";
 // }, {
 //   timezone: "America/New_York"  // UTC-5 (EST)
 // });
+
 
 console.log('Daily report scheduler started');
 

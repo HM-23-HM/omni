@@ -1,25 +1,25 @@
 FREQUENCY:
-	DAILY:
-		NEWSPAPERS:
-      - https://jamaica-gleaner.com/business
-      - https://www.jamaicaobserver.com/category/business/
-      - https://icinsider.com/
+  DAILY:
+    NEWSPAPERS:
+     - https://jamaica-gleaner.com/business
+     - https://www.jamaicaobserver.com/category/business/
+     - https://icinsider.com/
     JAMSTOCKEX:
     # Headlines and links to other links or short paragraphs. Only scrape links for stocks
     # being monitored
       - https://www.jamstockex.com/YYYY/MM/DD/
-		STOCK:
+    STOCK:
       - https://www.jamstockex.com/trading/instruments/?instrument=1600100 # TJH
       - https://www.jamstockex.com/trading/instruments/?instrument=1600087 # WIG
       - https://www.jamstockex.com/trading/instruments/?instrument=1600017 # SOS
-	DAY_OF_WEEK:
-		TUESDAY:
-			- https://jamaica-gleaner.com/article/shipping
-	WEEKLY:
-		- https://radiojamaicanewsonline.com/business
-		- https://our.today/category/business/
-	MONTHLY:
-	QUARTERLY:
+  DAY_OF_WEEK:
+   TUESDAY:
+      - https://jamaica-gleaner.com/article/shipping
+  WEEKLY:
+      - https://radiojamaicanewsonline.com/business
+      - https://our.today/category/business/
+  MONTHLY:
+  QUARTERLY:
 STOCKS: &STOCKS
   - TJH
   - WIG
@@ -34,13 +34,11 @@ prompts:
           The criteria are:
           - The headline is relevant to the real estate market. (highest weighting)
           - The headline is relevant to the technology market. (medium weighting)
-          - The headline is relevant to the stock market. (lowest weighting)
-
+          - The headline is relevant to the stock market. (lowest weighti        
           Return an array of objects with the following properties and nothing else:
           - headline (type: string)
           - priority (type: number)
-          - link (type: string)
-
+          - link (type: stri        
           The link should be the full URL to the article.
           No two articles should have the same priority.
           The priorities should be in descending order. 
@@ -68,9 +66,6 @@ prompts:
         ingest: |
           This is the home page for a stock exchange website
           First, pick out the headlines for the different news stories. 
-          Once you have isolated the headlines, filter them for the list of stocks being monitored.
-          The stocks being monitored are: 
-          *STOCKS
 
           Return an array of objects with the following properties and nothing else:
           - headline (type: string)
@@ -86,5 +81,5 @@ prompts:
 
           Return an object with the following properties and nothing else:
           - ticker (type: string) # The ticker symbol for the stock
-          - range (type: string) # The range of the stock for the day
+          - range (type: string) # The range of the stock for the day (Today's range)
           - volume (type: number) # The volume of the stock traded for the day

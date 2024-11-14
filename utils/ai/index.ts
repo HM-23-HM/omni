@@ -69,7 +69,7 @@ const formatPrompt = (header: string, content: string) => {
  * @param content - The content to process, will be wrapped in triple backticks
  * @returns Formatted prompt string
  */
-const buildPrompt = (stage: PromptStage, content: string, type: SourceType, frequency: Frequency = "DAILY"): string => {
+export const buildPrompt = (stage: PromptStage, content: string, type: SourceType, frequency: Frequency = "DAILY"): string => {
   const instruction = getInstruction(stage, type, frequency);
   return formatPrompt(instruction, content);
 };
