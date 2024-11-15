@@ -1,19 +1,19 @@
 import * as fsPromises from "fs/promises";
+import * as path from "path";
 import { sendPrompt } from "./ai/index.ts";
-import { generateDailyNewsHtml, generateDailyJamstockexHtml, sendEmail, generateDailyStockSummaryHtml } from "./email/index.ts";
+import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
+import { generateDailyJamstockexHtml, generateDailyNewsHtml, generateDailyStockSummaryHtml, sendEmail } from "./email/index.ts";
 import {
+  ArticleSource,
   closeBrowser,
-  getFullPage,
   getDailySourcesToIngest,
+  getFullPage,
   RankedArticle,
   scrapeTopStories,
   separateArticlesByPriority,
-  ArticleSource,
   StockData,
 } from "./ingestion/index.ts";
-import { cleanDailyJamstockexHtml, parseJamStockexDaily, parseJsonString, parseStockData } from "./parsing/index.ts";
-import * as path from "path";
-import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
+import { parseJamStockexDaily, parseJsonString, parseStockData } from "./parsing/index.ts";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.

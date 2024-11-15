@@ -94,9 +94,9 @@ export const sendPrompt = async (
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (err: any) {
-      if (err.status === 429) {
+      if (err.status === 429 || err.status === 503) {
         attempts++;
-        console.error(`429 Too Many Requests. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
+        console.error(`${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
         await new Promise(resolve => setTimeout(resolve, waitFor * 60 * 1000));
       } else {
         console.error(err);
@@ -105,5 +105,5 @@ export const sendPrompt = async (
     }
   }
 
-  throw new Error(`Failed to generate content after ${maxRetries} attempts due to 429 errors.`);
+  throw new Error(`Failed to generate content after ${maxRetries} attempts due to rate limiting or service unavailability.`);
 };

@@ -1,0 +1,31 @@
+name: Deploy to VPS
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+
+jobs:
+  deploy:
+    # Only run if PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate to app directory
+            cd ${{ secrets.VPS_APP_PATH }}
+
+            # Pull latest changes from main branch
+            git checkout main
+            git pull origin main
+
+            # Run the update script
+            ./scripts/vps/update.sh
+            
