@@ -27,5 +27,5 @@ jobs:
             git pull origin main
 
             # Run the update script
-            ./scripts/vps/update.sh
+            ./scripts/update.sh
             
