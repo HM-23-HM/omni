@@ -1,3 +1,3 @@
 #!/bin/bash
-yarn install
+yarn install --production
 pm2 reload omni
