@@ -163,7 +163,7 @@ const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstoc
   // Save the combined HTML to a file
   await savePageContent('daily-report.html', combinedHtml);
 
-  await sendEmail(combinedHtml);
+  await sendEmail(stripCodeMarkers(combinedHtml));
 };
 
 const savePageContent = async (filename: string, content: string): Promise<void> => {
