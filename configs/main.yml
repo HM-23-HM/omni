@@ -62,7 +62,6 @@ prompts:
           - Omit the word 'html' at the beginning of the response. The entire response
             should be valid html.
           - The analysis section should begin with the word 'Analysis:'
-          - If the source is icinsider, 
       JAMSTOCKEX: 
         ingest: |
           This is the home page for a stock exchange website
