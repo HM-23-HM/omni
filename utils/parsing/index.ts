@@ -164,3 +164,19 @@ export function parseJamStockexDaily(html: string): ArticleSource[] {
   
   return results;
 }
+
+/**
+ * Strip code markers like ```html or ``` from a string, regardless of position
+ * @param text - The string to strip code markers from
+ * @returns The string with code markers stripped
+ */
+export function stripCodeMarkers(text: string): string {
+  // Split into lines
+  const lines = text.split('\n');
+  const cleanedLines = lines.map(line => {
+    // Remove ```html or ``` markers wherever they appear in the line
+    return line.replace(/```(?:html)?/g, '');
+  });
+  
+  return cleanedLines.join('\n');
+}

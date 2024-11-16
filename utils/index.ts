@@ -13,7 +13,7 @@ import {
   separateArticlesByPriority,
   StockData,
 } from "./ingestion/index.ts";
-import { parseJamStockexDaily, parseJsonString, parseStockData } from "./parsing/index.ts";
+import { parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
@@ -198,6 +198,7 @@ export const sendDailyReport = async (): Promise<void> => {
     console.log("Stock summaries fetched");
 
     await generateAndSendEmail(processedArticles, jamstockexLinks, stockSummaries);
+
     console.log("Email sent successfully");
 
   } catch (error) {
