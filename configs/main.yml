@@ -47,8 +47,8 @@ prompts:
           Objectively summarize the following text, extracting key 
           financial and business information presented in a bulleted list.
           Each point should be separated by a new line.
-          Prioritize facts relevant to real estate professionals and technology
-          entrepreneurs. 
+          If there is any development that is highly relevant to the stock market or to the real estate market, then it should be included in the summary.
+          Otherwise, the summary should be focused on the business news.
           Following the bulleted summary, provide a brief (2 sentences max) objective 
           analysis explaining the potential economic/business significance of these facts.
           Emphasize the possible strategies or tactics that may be in motion.
@@ -62,6 +62,7 @@ prompts:
           - Omit the word 'html' at the beginning of the response. The entire response
             should be valid html.
           - The analysis section should begin with the word 'Analysis:'
+          - If the source is icinsider, 
       JAMSTOCKEX: 
         ingest: |
           This is the home page for a stock exchange website
