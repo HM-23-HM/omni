@@ -14,8 +14,4 @@ cron.schedule('0 11 * * *', async () => {
   timezone: "America/New_York"  // UTC-5 (EST)
 });
 
-
 console.log('Daily report scheduler started');
-
-sendDailyReport()
-.catch(console.error);
