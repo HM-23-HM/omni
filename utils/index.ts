@@ -14,6 +14,7 @@ import {
   StockData,
 } from "./ingestion/index.ts";
 import { parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
+import { log } from "./logging/index.ts";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
@@ -26,7 +27,7 @@ const getNewspaperSummaries = async (
   const headlinesWithSummaries: RankedArticle[] = [];
   for (const headline of hpArticles) {
     const pageContent = await fsPromises.readFile(headline.path!, "utf-8");
-    console.log({
+    log({
       headline: headline.headline,
       path: headline.path,
       length: pageContent.length,
@@ -48,9 +49,9 @@ const clearScrapedArticles = async () => {
     for (const file of files) {
       await fsPromises.unlink(path.join(directory, file));
     }
-    console.log("Cleared scraped-articles directory");
+    log("Cleared scraped-articles directory");
   } catch (error) {
-    console.error("Error clearing scraped-articles directory:", error);
+    log("Error clearing scraped-articles directory:" + error, true);
   }
 };
 
@@ -96,6 +97,11 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
   const pageContent = await getFullPage(url);
   const parsedData = parseJamStockexDaily(pageContent);
+  
+  // Save the parsed data
+  await savePageContent('jamstockex-daily.json', JSON.stringify(parsedData, null, 2));
+  log('Saved Jamstockex daily links');
+  
   return parsedData;
 }
 
@@ -133,13 +139,13 @@ const processNewspaperArticles = async (articles: ProcessedArticles): Promise<Pr
  */
 const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstockexLinks: ArticleSource[], stockSummaries: StockData[]): Promise<void> => {
   const newspaperHpHtml = generateDailyNewsHtml(newspaperSection.highPriority, "hp");
-  console.log('Generated newspaper high priority html');
+  log('Generated newspaper high priority html');
   const newspaperLpHtml = generateDailyNewsHtml(newspaperSection.lowPriority, "lp");
-  console.log('Generated newspaper low priority html');
+  log('Generated newspaper low priority html');
   const jamstockexHtml = generateDailyJamstockexHtml(jamstockexLinks);
-  console.log('Generated jamstockex html');
+  log('Generated jamstockex html');
   const stockSummaryHtml = generateDailyStockSummaryHtml(stockSummaries);
-  console.log('Generated stock summary html');
+  log('Generated stock summary html');
 
   const combinedHtml = `
     <div class="newspaper-section">
@@ -178,9 +184,9 @@ const savePageContent = async (filename: string, content: string): Promise<void>
     
     const filePath = path.join(directory, fullFilename);
     await fsPromises.writeFile(filePath, content, 'utf-8');
-    console.log(`Saved content to ${filePath}`);
+    log(`Saved content to ${filePath}`);
   } catch (error) {
-    console.error(`Error saving content to file: ${error}`);
+    log(`Error saving content to file: ${error}`, true);
     throw error;
   }
 };
@@ -189,20 +195,20 @@ export const sendDailyReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
     const processedArticles = await processNewspaperArticles(gatheredArticles);
-    console.log("Processed articles");
+    log("Processed articles");
 
     const jamstockexLinks = await getJamstockexDailyLinks();
-    console.log("Jamstockex links fetched");
+    log("Jamstockex links fetched");
 
     const stockSummaries = await getDailyStockSummaries();
-    console.log("Stock summaries fetched");
+    log("Stock summaries fetched");
 
     await generateAndSendEmail(processedArticles, jamstockexLinks, stockSummaries);
 
-    console.log("Email sent successfully");
+    log("Email sent successfully");
 
   } catch (error) {
-    console.error("Error sending report:", error);
+    log("Error sending report:" + error, true);
     throw error;
   } finally {
     // Clean up
