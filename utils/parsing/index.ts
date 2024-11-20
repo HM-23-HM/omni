@@ -182,11 +182,12 @@ export function stripCodeMarkers(text: string): string {
 }
 
 /**
- * Cleans newspaper article HTML by removing unnecessary markup and extracting key metadata
+ * Cleans newspaper article HTML by removing unnecessary markup and extracting key metadata.
+ * For the Jamaica-Gleaner and Jamaica-Observer
  * @param html Raw HTML string from newspaper article page
  * @returns Cleaned article data object
  */
-export function cleanObserverHtml(html: string) {
+export function cleanJamaica_XX_NewspaperHtml(html: string) {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -208,8 +209,11 @@ export function cleanObserverHtml(html: string) {
       '.sidebar',
       '.comments',
       '.social-share',
-      '[id*="taboola"]',
-      '[class*="advertisement"]'
+      '[class*="advertisement"]',
+      '.google-auto-placed', // Remove Google ads
+      '#jg-newsletter-sign-up', // Remove newsletter sign-up
+      '.autors-widget', // Remove author widget
+      'p:has(a[href*="mailto:"])' // Remove email links in paragraphs
   ];
 
   unwantedSelectors.forEach(selector => {
@@ -295,4 +299,10 @@ export function cleanIcInsiderHtml(html: string): string {
   }
 
   return ''; // Return empty string if no content found
+}
+
+export const newspaperSourceToCleanerFn = {
+  "https://jamaica-gleaner.com/business": cleanJamaica_XX_NewspaperHtml,
+  "https://www.jamaicaobserver.com/category/business/": cleanJamaica_XX_NewspaperHtml,
+  "https://icinsider.com/": cleanIcInsiderHtml,
 }
