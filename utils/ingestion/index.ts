@@ -19,6 +19,7 @@ export interface ArticleSource {
 }
 
 export interface RankedArticle {
+  source: string;
   headline: string;
   link: string;
   path?: string;

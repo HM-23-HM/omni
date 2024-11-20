@@ -13,7 +13,7 @@ import {
   separateArticlesByPriority,
   StockData,
 } from "./ingestion/index.ts";
-import { parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
+import { newspaperSourceToCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
 import { log } from "./logging/index.ts";
 
 /**
@@ -27,12 +27,14 @@ const getNewspaperSummaries = async (
   const headlinesWithSummaries: RankedArticle[] = [];
   for (const headline of hpArticles) {
     const pageContent = await fsPromises.readFile(headline.path!, "utf-8");
-    log({
+    const cleanedHtml = newspaperSourceToCleanerFn[headline.source as keyof typeof newspaperSourceToCleanerFn](pageContent);
+    console.log({
       headline: headline.headline,
       path: headline.path,
-      length: pageContent.length,
+      originalLength : pageContent.length,
+      cleanedLength: cleanedHtml.length,
     });
-    const summary = await sendPrompt("summarize", pageContent, "NEWSPAPERS", "DAILY");
+    const summary = await sendPrompt("summarize", cleanedHtml, "NEWSPAPERS", "DAILY");
     headlinesWithSummaries.push({
       ...headline,
       summary,
@@ -72,7 +74,11 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
   for (const website of websites) {
     const homePageContent = await getFullPage(website);
     const llmResponse = await sendPrompt("ingest", homePageContent, "NEWSPAPERS", "DAILY");
-    const rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
+    let rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
+    rankedArticles = rankedArticles.map((article) => ({
+      ...article,
+      source: website,
+    }));
 
     const { highPriority, lowPriority } = separateArticlesByPriority(
       rankedArticles,

@@ -82,7 +82,7 @@ export const sendPrompt = async (
   waitFor: number = 10, // default wait time in minutes
   maxRetries: number = 3 // maximum number of retries
 ): Promise<string> => {
-  console.log({ length: content.length });
+  console.log({ length: content.length, stage, type, frequency });
   const prompt = buildPrompt(stage, content, type, frequency);
   let attempts = 0;
 
