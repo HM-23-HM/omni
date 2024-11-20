@@ -82,7 +82,7 @@ export const sendPrompt = async (
   waitFor: number = 10, // default wait time in minutes
   maxRetries: number = 3 // maximum number of retries
 ): Promise<string> => {
-  console.log({ length: content.length });
+  console.log({ length: content.length, stage, type, frequency });
   const prompt = buildPrompt(stage, content, type, frequency);
   let attempts = 0;
 
@@ -96,6 +96,7 @@ export const sendPrompt = async (
     } catch (err: any) {
       if (err.status === 429 || err.status === 503) {
         attempts++;
+        console.error(err)
         console.error(`${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
         await new Promise(resolve => setTimeout(resolve, waitFor * 60 * 1000));
       } else {

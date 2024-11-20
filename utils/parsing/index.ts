@@ -180,3 +180,204 @@ export function stripCodeMarkers(text: string): string {
   
   return cleanedLines.join('\n');
 }
+
+/**
+ * Cleans newspaper article HTML by removing unnecessary markup and extracting key metadata.
+ * For the Jamaica-Gleaner and Jamaica-Observer
+ * @param html Raw HTML string from newspaper article page
+ * @returns Cleaned article data object
+ */
+export function cleanJamaica_XX_NewspaperHtml(html: string) {
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
+
+  // Remove unwanted elements
+  const unwantedSelectors = [
+      'script',
+      'style',
+      'iframe',
+      'link',
+      'meta',
+      'noscript',
+      'img',
+      'svg',
+      'picture',
+      '.ads',
+      '#header',
+      '#footer',
+      '.nav',
+      '.sidebar',
+      '.comments',
+      '.social-share',
+      '[class*="advertisement"]',
+      '.google-auto-placed', // Remove Google ads
+      '#jg-newsletter-sign-up', // Remove newsletter sign-up
+      '.autors-widget', // Remove author widget
+      'p:has(a[href*="mailto:"])' // Remove email links in paragraphs
+  ];
+
+  unwantedSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(el => el.remove());
+  });
+
+  // Extract main article content
+  const articleBody = document.querySelector('.body, .article-content, [class*="article-body"]')?.innerHTML || '';
+
+  // Clean up remaining HTML
+  const cleanedHtml = articleBody
+      .replace(/<\!--.*?-->/g, '') // Remove comments
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/<([^>]+)>\s*<\/\1>/g, '') // Remove empty tags
+      .trim();
+
+  return cleanedHtml;
+}
+
+/**
+ * Cleans ICInsider HTML content by removing unnecessary elements and extracting article content
+ * @param html Raw HTML string from ICInsider article
+ * @returns Cleaned article content
+ */
+export function cleanIcInsiderHtml(html: string): string {
+  // Create a DOMParser to work with the HTML
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  // Remove unwanted elements
+  const elementsToRemove = [
+      'script',
+      'style',
+      'header',
+      'nav',
+      '#header',
+      '#subnav',
+      '.post-info',
+      'link',
+      'meta',
+      '.elementor-widget-container hr', // Remove horizontal rules
+  ];
+
+  elementsToRemove.forEach(selector => {
+      doc.querySelectorAll(selector).forEach(el => el.remove());
+  });
+
+  // Try to get the main content using common selectors
+  const contentSelectors = [
+      '.elementor-widget-container',
+      '.entry-content',
+      '.post',
+      'article',
+  ];
+
+  let content: Element | null = null;
+  for (const selector of contentSelectors) {
+      content = doc.querySelector(selector);
+      if (content && content.textContent?.trim()) {
+          break;
+      }
+  }
+
+  // Clean and format the extracted content
+  if (content) {
+      // Remove empty paragraphs and divs
+      content.querySelectorAll('p, div').forEach(el => {
+          if (!el.textContent?.trim()) {
+              el.remove();
+          }
+      });
+
+      // Get the cleaned text content
+      let cleanedContent = content.textContent || '';
+      
+      // Remove extra whitespace and normalize spacing
+      cleanedContent = cleanedContent
+          .replace(/\s+/g, ' ')
+          .replace(/\n+/g, '\n')
+          .trim();
+
+      return cleanedContent;
+  }
+
+  return ''; // Return empty string if no content found
+}
+
+export const newspaperSourceToCleanerFn = {
+  "https://jamaica-gleaner.com/business": cleanJamaica_XX_NewspaperHtml,
+  "https://www.jamaicaobserver.com/category/business/": cleanJamaica_XX_NewspaperHtml,
+  "https://icinsider.com/": cleanIcInsiderHtml,
+}
+
+export function cleanJamObserverHomePage(htmlContent: string): string {
+  const dom = new JSDOM(htmlContent);
+  const document = dom.window.document;
+
+  // Find all business articles
+  const articles = document.querySelectorAll('article');
+  const businessArticles = Array.from(articles).filter(article => {
+    const category = article.querySelector('.categories')?.textContent;
+    return category?.includes('Business');
+  });
+
+  // Create a container for our cleaned content
+  const container = document.createElement('div');
+  container.className = 'business-headlines';
+
+  // Extract relevant information from each business article
+  businessArticles.forEach(article => {
+    const articleDiv = document.createElement('div');
+    articleDiv.className = 'article';
+
+    // Get headline
+    const headline = article.querySelector('.title a')?.textContent?.trim();
+    if (headline) {
+      const titleElement = document.createElement('h2');
+      titleElement.textContent = headline;
+      articleDiv.appendChild(titleElement);
+    }
+
+    // Get author if available
+    const author = article.querySelector('.author')?.textContent?.trim();
+    if (author) {
+      const authorElement = document.createElement('p');
+      authorElement.className = 'author';
+      authorElement.textContent = author;
+      articleDiv.appendChild(authorElement);
+    }
+
+    // Get date
+    const date = article.querySelector('.date_part')?.textContent?.trim();
+    if (date) {
+      const dateElement = document.createElement('p');
+      dateElement.className = 'date';
+      dateElement.textContent = date;
+      articleDiv.appendChild(dateElement);
+    }
+
+    // Get article preview/body if available
+    const body = article.querySelector('.body')?.textContent?.trim();
+    if (body) {
+      const bodyElement = document.createElement('p');
+      bodyElement.className = 'preview';
+      bodyElement.textContent = body;
+      articleDiv.appendChild(bodyElement);
+    }
+
+    // Add article link
+    const link = article.querySelector('.title a')?.getAttribute('href');
+    if (link) {
+      const linkElement = document.createElement('a');
+      linkElement.href = link;
+      linkElement.className = 'article-link';
+      linkElement.textContent = 'Read more';
+      articleDiv.appendChild(linkElement);
+    }
+
+    container.appendChild(articleDiv);
+  });
+
+  return container.innerHTML;
+}
+
+export const newspaperSourceToHomePageCleanerFn = {
+  "https://www.jamaicaobserver.com/category/business/": cleanJamObserverHomePage,
+}
