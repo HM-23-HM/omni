@@ -1,4 +1,4 @@
-export const log = (message: string, isError: boolean = false) => {
+export const log = (message: any, isError: boolean = false) => {
   const date = new Date();
   const timestamp = date.toLocaleString("en-US", {
     timeZone: "America/Jamaica",
