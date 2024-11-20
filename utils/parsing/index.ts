@@ -180,3 +180,51 @@ export function stripCodeMarkers(text: string): string {
   
   return cleanedLines.join('\n');
 }
+
+/**
+ * Cleans newspaper article HTML by removing unnecessary markup and extracting key metadata
+ * @param html Raw HTML string from newspaper article page
+ * @returns Cleaned article data object
+ */
+export function cleanNewspaperHtml(html: string) {
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
+
+  // Remove unwanted elements
+  const unwantedSelectors = [
+      'script',
+      'style',
+      'iframe',
+      'link',
+      'meta',
+      'noscript',
+      'img',
+      'svg',
+      'picture',
+      '.ads',
+      '#header',
+      '#footer',
+      '.nav',
+      '.sidebar',
+      '.comments',
+      '.social-share',
+      '[id*="taboola"]',
+      '[class*="advertisement"]'
+  ];
+
+  unwantedSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(el => el.remove());
+  });
+
+  // Extract main article content
+  const articleBody = document.querySelector('.body, .article-content, [class*="article-body"]')?.innerHTML || '';
+
+  // Clean up remaining HTML
+  const cleanedHtml = articleBody
+      .replace(/<\!--.*?-->/g, '') // Remove comments
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/<([^>]+)>\s*<\/\1>/g, '') // Remove empty tags
+      .trim();
+
+  return cleanedHtml;
+}
