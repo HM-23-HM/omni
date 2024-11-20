@@ -306,3 +306,78 @@ export const newspaperSourceToCleanerFn = {
   "https://www.jamaicaobserver.com/category/business/": cleanJamaica_XX_NewspaperHtml,
   "https://icinsider.com/": cleanIcInsiderHtml,
 }
+
+export function cleanJamObserverHomePage(htmlContent: string): string {
+  const dom = new JSDOM(htmlContent);
+  const document = dom.window.document;
+
+  // Find all business articles
+  const articles = document.querySelectorAll('article');
+  const businessArticles = Array.from(articles).filter(article => {
+    const category = article.querySelector('.categories')?.textContent;
+    return category?.includes('Business');
+  });
+
+  // Create a container for our cleaned content
+  const container = document.createElement('div');
+  container.className = 'business-headlines';
+
+  // Extract relevant information from each business article
+  businessArticles.forEach(article => {
+    const articleDiv = document.createElement('div');
+    articleDiv.className = 'article';
+
+    // Get headline
+    const headline = article.querySelector('.title a')?.textContent?.trim();
+    if (headline) {
+      const titleElement = document.createElement('h2');
+      titleElement.textContent = headline;
+      articleDiv.appendChild(titleElement);
+    }
+
+    // Get author if available
+    const author = article.querySelector('.author')?.textContent?.trim();
+    if (author) {
+      const authorElement = document.createElement('p');
+      authorElement.className = 'author';
+      authorElement.textContent = author;
+      articleDiv.appendChild(authorElement);
+    }
+
+    // Get date
+    const date = article.querySelector('.date_part')?.textContent?.trim();
+    if (date) {
+      const dateElement = document.createElement('p');
+      dateElement.className = 'date';
+      dateElement.textContent = date;
+      articleDiv.appendChild(dateElement);
+    }
+
+    // Get article preview/body if available
+    const body = article.querySelector('.body')?.textContent?.trim();
+    if (body) {
+      const bodyElement = document.createElement('p');
+      bodyElement.className = 'preview';
+      bodyElement.textContent = body;
+      articleDiv.appendChild(bodyElement);
+    }
+
+    // Add article link
+    const link = article.querySelector('.title a')?.getAttribute('href');
+    if (link) {
+      const linkElement = document.createElement('a');
+      linkElement.href = link;
+      linkElement.className = 'article-link';
+      linkElement.textContent = 'Read more';
+      articleDiv.appendChild(linkElement);
+    }
+
+    container.appendChild(articleDiv);
+  });
+
+  return container.innerHTML;
+}
+
+export const newspaperSourceToHomePageCleanerFn = {
+  "https://www.jamaicaobserver.com/category/business/": cleanJamObserverHomePage,
+}

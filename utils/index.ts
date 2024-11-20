@@ -1,7 +1,7 @@
 import * as fsPromises from "fs/promises";
 import * as path from "path";
 import { sendPrompt } from "./ai/index.ts";
-import { HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
+import { HIGH_PRIORITY_COUNT, PAGE_CONTENT_DIR, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
 import { generateDailyJamstockexHtml, generateDailyNewsHtml, generateDailyStockSummaryHtml, sendEmail } from "./email/index.ts";
 import {
   ArticleSource,
@@ -13,7 +13,7 @@ import {
   separateArticlesByPriority,
   StockData,
 } from "./ingestion/index.ts";
-import { newspaperSourceToCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
+import { newspaperSourceToCleanerFn, newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
 import { log } from "./logging/index.ts";
 
 /**
@@ -57,6 +57,16 @@ const clearScrapedArticles = async () => {
   }
 };
 
+const clearPageContent = async () => {
+  const directory = path.join(process.cwd(), PAGE_CONTENT_DIR);
+  try {
+    await fsPromises.rm(directory, { recursive: true });
+    log("Cleared page-content directory");
+  } catch (error) {
+    log("Error clearing page-content directory:" + error, true);
+  }
+}
+
 interface ProcessedArticles {
   highPriority: RankedArticle[];
   lowPriority: RankedArticle[];
@@ -71,8 +81,16 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
   const allHighPriority: RankedArticle[] = [];
   const allLowPriority: RankedArticle[] = [];
 
-  for (const website of websites) {
-    const homePageContent = await getFullPage(website);
+  for (const [index, website] of websites.entries()) {
+    log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
+    let homePageContent = await getFullPage(website);
+    log(`Home page content length: ${homePageContent.length}`);
+    if(newspaperSourceToHomePageCleanerFn[website as keyof typeof newspaperSourceToHomePageCleanerFn]) {
+      log(`Cleaning home page content for ${website}`);
+      homePageContent = newspaperSourceToHomePageCleanerFn[website as keyof typeof newspaperSourceToHomePageCleanerFn](homePageContent);
+      log(`Cleaned home page content length: ${homePageContent.length}`);
+    }
+    await savePageContent(`${index}-homepage.html`, homePageContent);
     const llmResponse = await sendPrompt("ingest", homePageContent, "NEWSPAPERS", "DAILY");
     let rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
     rankedArticles = rankedArticles.map((article) => ({
@@ -220,6 +238,7 @@ export const sendDailyReport = async (): Promise<void> => {
     // Clean up
     await closeBrowser();
     await clearScrapedArticles();
+    await clearPageContent();
   }
 };
 

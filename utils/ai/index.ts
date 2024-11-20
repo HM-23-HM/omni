@@ -96,6 +96,7 @@ export const sendPrompt = async (
     } catch (err: any) {
       if (err.status === 429 || err.status === 503) {
         attempts++;
+        console.error(err)
         console.error(`${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
         await new Promise(resolve => setTimeout(resolve, waitFor * 60 * 1000));
       } else {
