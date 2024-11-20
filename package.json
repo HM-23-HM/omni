@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx tsx index.ts"
+    "start": "npx tsx index.ts",
+    "manual": "npx tsx manual.ts"
   },
   "author": "",
   "license": "ISC",
