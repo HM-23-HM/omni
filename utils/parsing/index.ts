@@ -186,7 +186,7 @@ export function stripCodeMarkers(text: string): string {
  * @param html Raw HTML string from newspaper article page
  * @returns Cleaned article data object
  */
-export function cleanNewspaperHtml(html: string) {
+export function cleanObserverHtml(html: string) {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -227,4 +227,72 @@ export function cleanNewspaperHtml(html: string) {
       .trim();
 
   return cleanedHtml;
+}
+
+/**
+ * Cleans ICInsider HTML content by removing unnecessary elements and extracting article content
+ * @param html Raw HTML string from ICInsider article
+ * @returns Cleaned article content
+ */
+export function cleanIcInsiderHtml(html: string): string {
+  // Create a DOMParser to work with the HTML
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  // Remove unwanted elements
+  const elementsToRemove = [
+      'script',
+      'style',
+      'header',
+      'nav',
+      '#header',
+      '#subnav',
+      '.post-info',
+      'link',
+      'meta',
+      '.elementor-widget-container hr', // Remove horizontal rules
+  ];
+
+  elementsToRemove.forEach(selector => {
+      doc.querySelectorAll(selector).forEach(el => el.remove());
+  });
+
+  // Try to get the main content using common selectors
+  const contentSelectors = [
+      '.elementor-widget-container',
+      '.entry-content',
+      '.post',
+      'article',
+  ];
+
+  let content: Element | null = null;
+  for (const selector of contentSelectors) {
+      content = doc.querySelector(selector);
+      if (content && content.textContent?.trim()) {
+          break;
+      }
+  }
+
+  // Clean and format the extracted content
+  if (content) {
+      // Remove empty paragraphs and divs
+      content.querySelectorAll('p, div').forEach(el => {
+          if (!el.textContent?.trim()) {
+              el.remove();
+          }
+      });
+
+      // Get the cleaned text content
+      let cleanedContent = content.textContent || '';
+      
+      // Remove extra whitespace and normalize spacing
+      cleanedContent = cleanedContent
+          .replace(/\s+/g, ' ')
+          .replace(/\n+/g, '\n')
+          .trim();
+
+      return cleanedContent;
+  }
+
+  return ''; // Return empty string if no content found
 }
