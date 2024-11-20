@@ -31,7 +31,7 @@ let browserInstance: Browser | null = null;
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
     browserInstance = await puppeteer.launch({
-      args: ['--no-sandbox']
+      args: ["--no-sandbox"],
     });
   }
   return browserInstance;
@@ -47,14 +47,23 @@ export async function getFullPage(url: string) {
     const browser = await getBrowser();
     const page = await browser.newPage();
 
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-
-    await page.setExtraHTTPHeaders({
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+    // Set viewport to avoid mobile versions
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
     });
 
-    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    );
+
+    await page.setExtraHTTPHeaders({
+      "Accept-Language": "en-US,en;q=0.9",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    });
+
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
     const pageContent = await page.content();
     await page.close();
 
@@ -78,7 +87,7 @@ export async function closeBrowser() {
  * @returns The list of ranked headlines with paths to the scraped articles.
  */
 export async function scrapeTopStories(
-  headlines: RankedArticle[],
+  headlines: RankedArticle[]
 ): Promise<RankedArticle[]> {
   try {
     const outputDir = path.join(process.cwd(), SCRAPED_ARTICLES_DIR);
@@ -124,18 +133,25 @@ export type Frequency = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
  * @returns The list of websites to ingest
  */
 export const getDailySourcesToIngest = (
-  type: "NEWSPAPERS" | "STOCK" | "JAMSTOCKEX" = "NEWSPAPERS",
+  type: "NEWSPAPERS" | "STOCK" | "JAMSTOCKEX" = "NEWSPAPERS"
 ) => {
   const config = yaml.load(fs.readFileSync(CONFIG_FILE_PATH, "utf8")) as Config;
   return config.FREQUENCY.DAILY[type].map(populateDateUrl);
 };
 
-export function separateArticlesByPriority(articles: RankedArticle[], numHighPriority: number = 3): {
+export function separateArticlesByPriority(
+  articles: RankedArticle[],
+  numHighPriority: number = 3
+): {
   highPriority: RankedArticle[];
   lowPriority: RankedArticle[];
 } {
   return {
-    highPriority: articles.filter((article) => article.priority <= numHighPriority),
-    lowPriority: articles.filter((article) => article.priority > numHighPriority)
+    highPriority: articles.filter(
+      (article) => article.priority <= numHighPriority
+    ),
+    lowPriority: articles.filter(
+      (article) => article.priority > numHighPriority
+    ),
   };
 }
