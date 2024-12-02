@@ -1,8 +1,17 @@
 import * as fsPromises from "fs/promises";
 import * as path from "path";
 import { sendPrompt } from "./ai/index.ts";
-import { HIGH_PRIORITY_COUNT, PAGE_CONTENT_DIR, SCRAPED_ARTICLES_DIR } from "./constants/index.ts";
-import { generateDailyJamstockexHtml, generateDailyNewsHtml, generateDailyStockSummaryHtml, sendEmail } from "./email/index.ts";
+import {
+  HIGH_PRIORITY_COUNT,
+  PAGE_CONTENT_DIR,
+  SCRAPED_ARTICLES_DIR,
+} from "./constants/index.ts";
+import {
+  generateDailyJamstockexHtml,
+  generateDailyNewsHtml,
+  generateDailyStockSummaryHtml,
+  sendEmail,
+} from "./email/index.ts";
 import {
   ArticleSource,
   closeBrowser,
@@ -13,7 +22,14 @@ import {
   separateArticlesByPriority,
   StockData,
 } from "./ingestion/index.ts";
-import { newspaperSourceToCleanerFn, newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, stripCodeMarkers } from "./parsing/index.ts";
+import {
+  newspaperSourceToCleanerFn,
+  newspaperSourceToHomePageCleanerFn,
+  parseJamStockexDaily,
+  parseJsonString,
+  parseStockData,
+  stripCodeMarkers,
+} from "./parsing/index.ts";
 import { log } from "./logging/index.ts";
 
 /**
@@ -27,14 +43,22 @@ const getNewspaperSummaries = async (
   const headlinesWithSummaries: RankedArticle[] = [];
   for (const headline of hpArticles) {
     const pageContent = await fsPromises.readFile(headline.path!, "utf-8");
-    const cleanedHtml = newspaperSourceToCleanerFn[headline.source as keyof typeof newspaperSourceToCleanerFn](pageContent);
+    const cleanedHtml =
+      newspaperSourceToCleanerFn[
+        headline.source as keyof typeof newspaperSourceToCleanerFn
+      ](pageContent);
     console.log({
       headline: headline.headline,
       path: headline.path,
-      originalLength : pageContent.length,
+      originalLength: pageContent.length,
       cleanedLength: cleanedHtml.length,
     });
-    const summary = await sendPrompt("summarize", cleanedHtml, "NEWSPAPERS", "DAILY");
+    const summary = await sendPrompt(
+      "summarize",
+      cleanedHtml,
+      "NEWSPAPERS",
+      "DAILY"
+    );
     headlinesWithSummaries.push({
       ...headline,
       summary,
@@ -65,7 +89,7 @@ const clearPageContent = async () => {
   } catch (error) {
     log("Error clearing page-content directory:" + error, true);
   }
-}
+};
 
 interface ProcessedArticles {
   highPriority: RankedArticle[];
@@ -85,13 +109,25 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
     log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
     let homePageContent = await getFullPage(website);
     log(`Home page content length: ${homePageContent.length}`);
-    if(newspaperSourceToHomePageCleanerFn[website as keyof typeof newspaperSourceToHomePageCleanerFn]) {
+    if (
+      newspaperSourceToHomePageCleanerFn[
+        website as keyof typeof newspaperSourceToHomePageCleanerFn
+      ]
+    ) {
       log(`Cleaning home page content for ${website}`);
-      homePageContent = newspaperSourceToHomePageCleanerFn[website as keyof typeof newspaperSourceToHomePageCleanerFn](homePageContent);
+      homePageContent =
+        newspaperSourceToHomePageCleanerFn[
+          website as keyof typeof newspaperSourceToHomePageCleanerFn
+        ](homePageContent);
       log(`Cleaned home page content length: ${homePageContent.length}`);
     }
     await savePageContent(`${index}-homepage.html`, homePageContent);
-    const llmResponse = await sendPrompt("ingest", homePageContent, "NEWSPAPERS", "DAILY");
+    const llmResponse = await sendPrompt(
+      "ingest",
+      homePageContent,
+      "NEWSPAPERS",
+      "DAILY"
+    );
     let rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
     rankedArticles = rankedArticles.map((article) => ({
       ...article,
@@ -102,14 +138,14 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
       rankedArticles,
       HIGH_PRIORITY_COUNT
     );
-    
+
     allHighPriority.push(...highPriority);
     allLowPriority.push(...lowPriority);
   }
 
-  return { 
-    highPriority: allHighPriority, 
-    lowPriority: allLowPriority 
+  return {
+    highPriority: allHighPriority,
+    lowPriority: allLowPriority,
   };
 };
 
@@ -121,13 +157,16 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
   const pageContent = await getFullPage(url);
   const parsedData = parseJamStockexDaily(pageContent);
-  
+
   // Save the parsed data
-  await savePageContent('jamstockex-daily.json', JSON.stringify(parsedData, null, 2));
-  log('Saved Jamstockex daily links');
-  
+  await savePageContent(
+    "jamstockex-daily.json",
+    JSON.stringify(parsedData, null, 2)
+  );
+  log("Saved Jamstockex daily links");
+
   return parsedData;
-}
+};
 
 export const getDailyStockSummaries = async (): Promise<StockData[]> => {
   const urls = getDailySourcesToIngest("STOCK");
@@ -136,24 +175,31 @@ export const getDailyStockSummaries = async (): Promise<StockData[]> => {
     const pageContent = await getFullPage(url);
     await savePageContent(`stock-${index}.html`, pageContent);
     const parsedContent = parseStockData(pageContent);
-    await savePageContent(`stock-${index}-parsed.json`, JSON.stringify(parsedContent));
+    await savePageContent(
+      `stock-${index}-parsed.json`,
+      JSON.stringify(parsedContent)
+    );
     stockSummaries.push(parsedContent);
   }
   return stockSummaries;
-}
+};
 
 /**
  * Processes the gathered articles by scraping content and generating summaries
  * @param articles The raw gathered articles
  * @returns Processed articles with summaries
  */
-const processNewspaperArticles = async (articles: ProcessedArticles): Promise<ProcessedArticles> => {
+const processNewspaperArticles = async (
+  articles: ProcessedArticles
+): Promise<ProcessedArticles> => {
   const highPriorityWithPaths = await scrapeTopStories(articles.highPriority);
-  const highPriorityWithSummaries = await getNewspaperSummaries(highPriorityWithPaths);
+  const highPriorityWithSummaries = await getNewspaperSummaries(
+    highPriorityWithPaths
+  );
 
   return {
     highPriority: highPriorityWithSummaries,
-    lowPriority: articles.lowPriority
+    lowPriority: articles.lowPriority,
   };
 };
 
@@ -161,28 +207,24 @@ const processNewspaperArticles = async (articles: ProcessedArticles): Promise<Pr
  * Generates and sends the final report
  * @param newspaperSection The processed articles ready for reporting
  */
-const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstockexLinks: ArticleSource[], stockSummaries: StockData[]): Promise<void> => {
-  const newspaperHpHtml = generateDailyNewsHtml(newspaperSection.highPriority, "hp");
-  log('Generated newspaper high priority html');
-  const newspaperLpHtml = generateDailyNewsHtml(newspaperSection.lowPriority, "lp");
-  log('Generated newspaper low priority html');
-  const jamstockexHtml = generateDailyJamstockexHtml(jamstockexLinks);
-  log('Generated jamstockex html');
-  const stockSummaryHtml = generateDailyStockSummaryHtml(stockSummaries);
-  log('Generated stock summary html');
+const sendDailyNewsEmail = async (
+  newspaperSection: ProcessedArticles
+): Promise<void> => {
+  const newspaperHpHtml = generateDailyNewsHtml(
+    newspaperSection.highPriority,
+    "hp"
+  );
+  log("Generated newspaper high priority html");
+  const newspaperLpHtml = generateDailyNewsHtml(
+    newspaperSection.lowPriority,
+    "lp"
+  );
+  log("Generated newspaper low priority html");
 
   const combinedHtml = `
     <div class="newspaper-section">
       <h2>Newspaper - High Priority</h2>
       ${newspaperHpHtml}
-    </div>
-    <div class="jamstockex-section">
-      <h2>Jamstockex Daily</h2>
-      ${jamstockexHtml}
-    </div>
-    <div class="stock-summary-section">
-      <h2>JSE Stock Summary</h2>
-      ${stockSummaryHtml}
     </div>
     <div class="newspaper-section">
       <h2>Newspaper - Low Priority</h2>
@@ -191,23 +233,52 @@ const generateAndSendEmail = async (newspaperSection: ProcessedArticles, jamstoc
   `;
 
   // Save the combined HTML to a file
-  await savePageContent('daily-report.html', combinedHtml);
+  await savePageContent("daily-report.html", combinedHtml);
 
   await sendEmail(stripCodeMarkers(combinedHtml));
 };
 
-const savePageContent = async (filename: string, content: string): Promise<void> => {
+const sendJamstockexEmail = async (
+  jamstockexLinks: ArticleSource[],
+  stockSummaries: StockData[]
+): Promise<void> => {
+  const jamstockexHtml = generateDailyJamstockexHtml(jamstockexLinks);
+  log("Generated jamstockex html");
+  const stockSummaryHtml = generateDailyStockSummaryHtml(stockSummaries);
+  log("Generated stock summary html");
+
+  const combinedHtml = `
+    <div class="jamstockex-section">
+      <h2>Jamstockex Daily</h2>
+      ${jamstockexHtml}
+    </div>
+    <div class="stock-summary-section">
+      <h2>JSE Stock Summary</h2>
+      ${stockSummaryHtml}
+    </div>
+  `;
+
+  await savePageContent("daily-report-jamstockex.html", combinedHtml);
+  await sendEmail(stripCodeMarkers(combinedHtml));
+};
+
+const savePageContent = async (
+  filename: string,
+  content: string
+): Promise<void> => {
   try {
-    const directory = path.join(process.cwd(), 'page-content');
+    const directory = path.join(process.cwd(), "page-content");
     // Ensure directory exists
     await fsPromises.mkdir(directory, { recursive: true });
-    
+
     // Determine file extension based on content type
-    const extension = content.trim().startsWith('<') ? '.html' : '.txt';
-    const fullFilename = filename.includes('.') ? filename : `${filename}${extension}`;
-    
+    const extension = content.trim().startsWith("<") ? ".html" : ".txt";
+    const fullFilename = filename.includes(".")
+      ? filename
+      : `${filename}${extension}`;
+
     const filePath = path.join(directory, fullFilename);
-    await fsPromises.writeFile(filePath, content, 'utf-8');
+    await fsPromises.writeFile(filePath, content, "utf-8");
     log(`Saved content to ${filePath}`);
   } catch (error) {
     log(`Error saving content to file: ${error}`, true);
@@ -215,24 +286,17 @@ const savePageContent = async (filename: string, content: string): Promise<void>
   }
 };
 
-export const sendDailyReport = async (): Promise<void> => {
+export const sendDailyNewsReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
     const processedArticles = await processNewspaperArticles(gatheredArticles);
     log("Processed articles");
 
-    const jamstockexLinks = await getJamstockexDailyLinks();
-    log("Jamstockex links fetched");
-
-    const stockSummaries = await getDailyStockSummaries();
-    log("Stock summaries fetched");
-
-    await generateAndSendEmail(processedArticles, jamstockexLinks, stockSummaries);
+    await sendDailyNewsEmail(processedArticles);
 
     log("Email sent successfully");
-
   } catch (error) {
-    log("Error sending report:" + error, true);
+    log("Error sending daily news report:" + error, true);
     throw error;
   } finally {
     // Clean up
@@ -242,3 +306,21 @@ export const sendDailyReport = async (): Promise<void> => {
   }
 };
 
+export const sendDailyJamstockexReport = async (): Promise<void> => {
+  try {
+    const jamstockexLinks = await getJamstockexDailyLinks();
+    log("Jamstockex links fetched");
+
+    const stockSummaries = await getDailyStockSummaries();
+    log("Stock summaries fetched");
+
+    await sendJamstockexEmail(jamstockexLinks, stockSummaries);
+  } catch (error) {
+    log("Error sending jamstockex report:" + error, true);
+    throw error;
+  } finally {
+    await closeBrowser();
+    await clearScrapedArticles();
+    await clearPageContent();
+  }
+};
