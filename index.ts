@@ -16,7 +16,7 @@ cron.schedule('0 12 * * *', async () => {
 });
 
 
-cron.schedule('0 16 * * *', async () => {
+cron.schedule('0 16 * * 1-5', async () => {
   try {
     await sendDailyJamstockexReport();
     log('Daily jamstockex report sent successfully');
