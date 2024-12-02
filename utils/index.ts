@@ -259,7 +259,7 @@ const sendJamstockexEmail = async (
   `;
 
   await savePageContent("daily-report-jamstockex.html", combinedHtml);
-  await sendEmail(stripCodeMarkers(combinedHtml));
+  await sendEmail(stripCodeMarkers(combinedHtml), "Daily Jamstockex Report");
 };
 
 const savePageContent = async (

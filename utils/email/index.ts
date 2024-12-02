@@ -70,7 +70,7 @@ export const generateDailyStockSummaryHtml = (
   return compiledTemplate({ sections });
 };
 
-export const sendEmail = async (html: string) => {
+export const sendEmail = async (html: string, subject: string = "Daily Report") => {
   try {
     const accessToken = await getAccessToken();
     const transporter = nodemailer.createTransport({
@@ -88,7 +88,7 @@ export const sendEmail = async (html: string) => {
     const mailOptions: Mail.Options = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECIPIENT,
-      subject: "Daily Report",
+      subject,
       html,
     };
 
