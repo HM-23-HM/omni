@@ -12,8 +12,10 @@ export const log = (message: any, isError: boolean = false) => {
   });
 
   if (isError) {
-    console.error(`[${timestamp}] ${message}`);
+    if(typeof message == 'string') return console.error(`[${timestamp}] ${message}`);
+    console.error(`[${timestamp}] ${JSON.stringify(message, null, 2)}`);
   } else {
-    console.log(`[${timestamp}] ${message}`);
+   if(typeof message == 'string') return console.log(`[${timestamp}] ${message}`);
+    console.log(`[${timestamp}] ${JSON.stringify(message, null, 2)}`);
   }
 };
