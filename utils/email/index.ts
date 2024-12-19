@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer/index.js";
 import * as path from "path";
 import { ArticleSource, RankedArticle, StockData } from "../ingestion/index.ts";
+import { log } from "../logging/index.ts";
 
 const lpTemplate = fs.readFileSync(
   path.join(process.cwd(), `./html-templates/lp-section.html`),
@@ -36,7 +37,7 @@ const getAccessToken = async (): Promise<string> => {
     }
     return token;
   } catch (error) {
-    console.error("Error getting access token:", error);
+    log("Error getting access token: " + error, true);
     throw error;
   }
 };
@@ -94,7 +95,8 @@ export const sendEmail = async (html: string, subject: string = "Daily Report") 
 
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending email:", error);
+    log("Error sending email: " + error, true);
+    log(error, true);
     throw error;
   }
 };
