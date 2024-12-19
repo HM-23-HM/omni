@@ -30,12 +30,12 @@ export interface RankedArticle {
 }
 
 let browserInstance: Browser | null = null;
-
+const proxyUrl = 'http://154.85.58.149:80'; // Replace with your proxy URL
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
     browserInstance = await puppeteer.launch({
-      args: ["--no-sandbox"],
+      args: ["--no-sandbox", `--proxy-server=${proxyUrl}`],
     });
   }
   return browserInstance;
@@ -93,10 +93,30 @@ export async function closeBrowser() {
  */
 export async function fetchHtml(url: string) {
   try{
-    const { data: html } = await axios.get(url);
+    const { data: html } = await axios
+    .get(url)
+    .catch(function (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        log(error.response.data, true);
+        log(error.response.status,  true);
+        log(error.response.headers, true);
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        log(error.request, true);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        log(error.message, true);
+      }
+      throw error
+    })
+    ;
     return html;
   } catch (error) {
-    log(`An error occurred while fetching the url: ${error}`, true);
+    log(`An error occurred while fetching the url`, true);
     throw error;
   }
 }
@@ -177,3 +197,4 @@ export function separateArticlesByPriority(
     ),
   };
 }
+ 
