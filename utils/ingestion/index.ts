@@ -7,6 +7,7 @@ import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
 import { populateDateUrl } from "../parsing/index.ts";
 import { log } from "../logging/index.ts";
+import axios from "axios";
 
 export interface StockData {
   ticker: string;
@@ -45,7 +46,7 @@ async function getBrowser(): Promise<Browser> {
  * @param url - The URL to get the full page content from
  * @returns The full page content
  */
-export async function getFullPage(url: string) {
+export async function scrape(url: string) {
   try {
     const browser = await getBrowser();
     const page = await browser.newPage();
@@ -72,7 +73,7 @@ export async function getFullPage(url: string) {
 
     return pageContent;
   } catch (error) {
-    log(`An error occurred while getting the full page: ${error}`, true);
+    log(`An error occurred while scraping the url: ${error}`, true);
     throw error;
   }
 }
@@ -83,6 +84,23 @@ export async function closeBrowser() {
     browserInstance = null;
   }
 }
+
+/**
+ * Fetch the HTML content from a given URL
+ * @param url - The URL to fetch the HTML content from
+ * @returns The HTML content
+ * @throws An error if the fetch fails
+ */
+export async function fetchHtml(url: string) {
+  try{
+    const { data: html } = await axios.get(url);
+    return html;
+  } catch (error) {
+    log(`An error occurred while fetching the url: ${error}`, true);
+    throw error;
+  }
+}
+
 
 /**
  * Scrape the top headlines from the list of ranked headlines.
@@ -100,7 +118,7 @@ export async function scrapeTopStories(
 
     const scrapePromises = headlines.map(async (headline) => {
       try {
-        const content = await getFullPage(headline.link);
+        const content = await scrape(headline.link);
 
         const safeFilename = headline.headline
           .replace(/[^a-z0-9]/gi, "_")

@@ -16,11 +16,12 @@ import {
   ArticleSource,
   closeBrowser,
   getDailySourcesToIngest,
-  getFullPage,
+  scrape,
   RankedArticle,
   scrapeTopStories,
   separateArticlesByPriority,
   StockData,
+  fetchHtml,
 } from "./ingestion/index.ts";
 import {
   newspaperSourceToCleanerFn,
@@ -107,7 +108,7 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
 
   for (const [index, website] of websites.entries()) {
     log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
-    let homePageContent = await getFullPage(website);
+    let homePageContent = await scrape(website);
     log(`Home page content length: ${homePageContent.length}`);
     if (
       newspaperSourceToHomePageCleanerFn[
@@ -155,11 +156,8 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
  */
 const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
-  log({ url });
-  const pageContent = await getFullPage(url);
-  log({ pageContent })
+  const pageContent = await fetchHtml(url);
   const parsedData = parseJamStockexDaily(pageContent);
-  log({ parsedData })
 
   // Save the parsed data
   await savePageContent(
@@ -173,15 +171,13 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
 
 export const getDailyStockSummaries = async (): Promise<StockData[]> => {
   const urls = getDailySourcesToIngest("STOCK");
-  log({ urls})
+  log({ urls })
   const stockSummaries: StockData[] = [];
   for (const [index, url] of urls.entries()) {
-    const pageContent = await getFullPage(url);
-    log({ stockSummariesPageContent: pageContent})
+    const pageContent = await fetchHtml(url);
     await savePageContent(`stock-${index}.html`, pageContent);
     log(" Saved stock summary page content");
     const parsedContent = parseStockData(pageContent);
-    log({ stockSummariesParsedContent: parsedContent })
     await savePageContent(
       `stock-${index}-parsed.json`,
       JSON.stringify(parsedContent)
