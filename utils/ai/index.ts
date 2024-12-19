@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH } from "../constants/index.ts";
+import { log } from "../logging/index.ts";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -82,25 +83,25 @@ export const sendPrompt = async (
   waitFor: number = 10, // default wait time in minutes
   maxRetries: number = 3 // maximum number of retries
 ): Promise<string> => {
-  console.log({ length: content.length, stage, type, frequency });
+  log({ length: content.length, stage, type, frequency });
   const prompt = buildPrompt(stage, content, type, frequency);
   let attempts = 0;
 
   while (attempts < maxRetries) {
     try {
       if (attempts > 0) {
-        console.log(`Retrying...`);
+        log(`Retrying...`);
       }
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (err: any) {
       if (err.status === 429 || err.status === 503) {
         attempts++;
-        console.error(err)
-        console.error(`${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`);
+        log(err, true)
+        log(`${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`, true);
         await new Promise(resolve => setTimeout(resolve, waitFor * 60 * 1000));
       } else {
-        console.error(err);
+        log(err, true);
         throw err;
       }
     }

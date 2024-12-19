@@ -155,8 +155,11 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
  */
 const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
+  log({ url });
   const pageContent = await getFullPage(url);
+  log({ pageContent })
   const parsedData = parseJamStockexDaily(pageContent);
+  log({ parsedData })
 
   // Save the parsed data
   await savePageContent(
@@ -170,11 +173,15 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
 
 export const getDailyStockSummaries = async (): Promise<StockData[]> => {
   const urls = getDailySourcesToIngest("STOCK");
+  log({ urls})
   const stockSummaries: StockData[] = [];
   for (const [index, url] of urls.entries()) {
     const pageContent = await getFullPage(url);
+    log({ stockSummariesPageContent: pageContent})
     await savePageContent(`stock-${index}.html`, pageContent);
+    log(" Saved stock summary page content");
     const parsedContent = parseStockData(pageContent);
+    log({ stockSummariesParsedContent: parsedContent })
     await savePageContent(
       `stock-${index}-parsed.json`,
       JSON.stringify(parsedContent)
@@ -320,7 +327,7 @@ export const sendDailyJamstockexReport = async (): Promise<void> => {
     throw error;
   } finally {
     await closeBrowser();
-    await clearScrapedArticles();
-    await clearPageContent();
+    // await clearScrapedArticles();
+    // await clearPageContent();
   }
 };

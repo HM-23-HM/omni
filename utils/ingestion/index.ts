@@ -6,6 +6,7 @@ import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
 import { populateDateUrl } from "../parsing/index.ts";
+import { log } from "../logging/index.ts";
 
 export interface StockData {
   ticker: string;
@@ -71,7 +72,7 @@ export async function getFullPage(url: string) {
 
     return pageContent;
   } catch (error) {
-    console.error(`An error occurred while getting the full page: ${error}`);
+    log(`An error occurred while getting the full page: ${error}`, true);
     throw error;
   }
 }
@@ -114,16 +115,17 @@ export async function scrapeTopStories(
         });
         await fsPromises.writeFile(filePath, content, "utf-8");
 
-        console.log(`Successfully scraped: ${headline.headline}`);
+        log(`Successfully scraped: ${headline.headline}`);
       } catch (error) {
-        console.error(`Failed to scrape ${headline.headline}:`, error);
+        log(`Failed to scrape ${headline.headline}: ` + error, true);
+        log(error, true);
       }
     });
 
     await Promise.all(scrapePromises);
     return headlinesWithPaths;
   } catch (error) {
-    console.error("Error in scrapeTopStories:", error);
+    log("Error in scrapeTopStories: "+ error, true);
     throw error;
   }
 }
