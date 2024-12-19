@@ -320,7 +320,7 @@ export const sendDailyJamstockexReport = async (): Promise<void> => {
     throw error;
   } finally {
     await closeBrowser();
-    await clearScrapedArticles();
-    await clearPageContent();
+    // await clearScrapedArticles();
+    // await clearPageContent();
   }
 };
