@@ -16,19 +16,16 @@ cron.schedule('0 12 * * *', async () => {
 });
 
 
-//TO-DO: Figure out why this is not working
-
-// cron.schedule('0 0 * * 1-5', async () => {
-//   try {
-//     await sendDailyJamstockexReport();
-//     log('Daily jamstockex report sent successfully');
-//   } catch (error) {
-//     log('Error sending daily jamstockex report:' + error, true);
-//   }
-// }, {
-//   timezone: "America/New_York"  // UTC-5 (EST)
-// });
+cron.schedule('30 23 * * 1-5', async () => {
+  try {
+    await sendDailyJamstockexReport();
+    log('Daily jamstockex report sent successfully');
+  } catch (error) {
+    log('Error sending daily jamstockex report:' + error, true);
+  }
+}, {
+  timezone: "America/New_York"  // UTC-5 (EST)
+});
 
 
-
-log('Daily report scheduler started');
+log('Schedulers have started');
