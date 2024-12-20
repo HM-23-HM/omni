@@ -93,39 +93,24 @@ export async function closeBrowser() {
  * @throws An error if the fetch fails
  */
 export async function fetchHtml(url: string) {
-  try{
+  try {
     const { host, port } = await getProxy();
     log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
-    .get(url, { 
-      proxy: { host, port, protocol: 'http' },
-    })
-    .catch(function (error) {
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        log(error.response.data, true);
-        log(error.response.status,  true);
-        log(error.response.headers, true);
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-        log(error.request, true);
-      } else {
-        // Something happened in setting up the request that triggered an Error
+      .get(url, {
+        proxy: { host, port, protocol: "http" },
+      })
+      .catch(function (error) {
+        log(`An error occurred while fetching the url: ${url} `, true);
         log(error.message, true);
-      }
-      throw error
-    })
-    ;
+        throw error;
+      });
     return html;
   } catch (error) {
     log(`An error occurred while fetching the url`, true);
     throw error;
   }
 }
-
 
 /**
  * Scrape the top headlines from the list of ranked headlines.
@@ -168,7 +153,7 @@ export async function scrapeTopStories(
     await Promise.all(scrapePromises);
     return headlinesWithPaths;
   } catch (error) {
-    log("Error in scrapeTopStories: "+ error, true);
+    log("Error in scrapeTopStories: " + error, true);
     throw error;
   }
 }
@@ -204,19 +189,19 @@ export function separateArticlesByPriority(
 }
 
 export async function getProxyUrl() {
-  const source = "https://hide.mn/en/proxy-list/"
-  log('Getting proxy list');
-  const {data: html } = await axios.get(source);
-  log('Got proxy list');
+  const source = "https://hide.mn/en/proxy-list/";
+  log("Getting proxy list");
+  const { data: html } = await axios.get(source);
+  log("Got proxy list");
   await savePageContent("proxy-list.html", html);
   log("Saved proxy list");
   const proxyList = getProxyUrls();
   log(`Using proxy: ${proxyList[0]}`);
-  return proxyList[0]
+  return proxyList[0];
 }
 
-export async function getProxy(){
+export async function getProxy() {
   const proxyUrl = await getProxyUrl();
-  const [host, port] = proxyUrl.replace('http://','').split(":");
-  return { host, port: parseInt(port) }
+  const [host, port] = proxyUrl.replace("http://", "").split(":");
+  return { host, port: parseInt(port) };
 }
