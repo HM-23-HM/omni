@@ -38,11 +38,12 @@ prompts:
           Return an array of objects with the following properties and nothing else:
           - headline (type: string)
           - priority (type: number)
-          - link (type: stri        
+          - link (type: string)        
           The link should be the full URL to the article.
           No two articles should have the same priority.
           The priorities should be in descending order. 
           The highest priority should be 1.
+          The headlines should be followed by the date of the article in the format YYYY-MM-DD.
         summarize: |
           Objectively summarize the following text, extracting key 
           financial and business information presented in a bulleted list.
