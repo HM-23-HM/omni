@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';  // Need to install this package first
 import { ArticleSource, StockData } from '../ingestion/index.ts';
 import { log } from '../logging/index.ts';
-
+import fs from 'fs';
 
 export function parseJsonString(input: string) {
   // First, find the actual JSON content between the backticks
@@ -382,3 +382,25 @@ export function cleanJamObserverHomePage(htmlContent: string): string {
 export const newspaperSourceToHomePageCleanerFn = {
   "https://www.jamaicaobserver.com/category/business/": cleanJamObserverHomePage,
 }
+
+export const getProxyUrls = (): string[] => {
+  const filePath = 'page-content/proxy-list.html';
+  const htmlContent = fs.readFileSync(filePath, 'utf-8');
+  const dom = new JSDOM(htmlContent);
+  const document = dom.window.document;
+
+  const proxyList: any[] = [];
+  const rows = document.querySelectorAll('body > div.wrap > div.services_proxylist.services > div > div.table_block > table > tbody > tr');
+
+  rows.forEach((row) => {
+    const ip = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+    const port = row.querySelector('td:nth-child(2)')?.textContent?.trim();
+    const country = row.querySelector('td:nth-child(3) > span.country')?.textContent?.trim();
+    const protocol = row.querySelector('td:nth-child(5)')?.textContent?.trim();
+    if (ip && port && country && protocol === 'HTTP' && /united states/ig.test(country)) {
+      proxyList.push({ ip, port });
+    }
+  });
+
+  return proxyList.map(proxy => `http://${proxy.ip}:${proxy.port}`);
+};

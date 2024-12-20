@@ -1,4 +1,4 @@
-import { sendDailyNewsReport, sendDailyJamstockexReport } from "./utils/index.ts";
+import { sendDailyJamstockexReport } from "./utils/index.ts";
 import { log } from "./utils/logging/index.ts";
 
 log("Manually sending jamstockex report");

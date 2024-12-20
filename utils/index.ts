@@ -265,7 +265,7 @@ const sendJamstockexEmail = async (
   await sendEmail(stripCodeMarkers(combinedHtml), "Daily Jamstockex Report");
 };
 
-const savePageContent = async (
+export const savePageContent = async (
   filename: string,
   content: string
 ): Promise<void> => {
