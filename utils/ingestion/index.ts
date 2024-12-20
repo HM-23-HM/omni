@@ -5,9 +5,10 @@ import { Config } from "../ai/index.ts";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
-import { populateDateUrl } from "../parsing/index.ts";
+import { getProxyUrls, populateDateUrl } from "../parsing/index.ts";
 import { log } from "../logging/index.ts";
 import axios from "axios";
+import { savePageContent } from "../index.ts";
 
 export interface StockData {
   ticker: string;
@@ -30,7 +31,7 @@ export interface RankedArticle {
 }
 
 let browserInstance: Browser | null = null;
-const proxyUrl = 'http://154.85.58.149:80'; // Replace with your proxy URL
+const proxyUrl = await getProxyUrl();
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
@@ -197,4 +198,15 @@ export function separateArticlesByPriority(
     ),
   };
 }
- 
+
+export async function getProxyUrl() {
+  const source = "https://hide.mn/en/proxy-list/"
+  log('Getting proxy list');
+  const {data: html } = await axios.get(source);
+  log('Got proxy list');
+  await savePageContent("proxy-list.html", html);
+  log("Saved proxy list");
+  const proxyList = getProxyUrls();
+  log(`Using proxy: ${proxyList[0]}`);
+  return proxyList[0]
+}
