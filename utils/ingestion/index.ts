@@ -94,8 +94,12 @@ export async function closeBrowser() {
  */
 export async function fetchHtml(url: string) {
   try{
+    const { host, port } = await getProxy();
+    log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
-    .get(url)
+    .get(url, { 
+      proxy: { host, port, protocol: 'http' },
+    })
     .catch(function (error) {
       if (error.response) {
         // The request was made and the server responded with a status code
@@ -209,4 +213,10 @@ export async function getProxyUrl() {
   const proxyList = getProxyUrls();
   log(`Using proxy: ${proxyList[0]}`);
   return proxyList[0]
+}
+
+export async function getProxy(){
+  const proxyUrl = await getProxyUrl();
+  const [host, port] = proxyUrl.replace('http://','').split(":");
+  return { host, port: parseInt(port) }
 }
