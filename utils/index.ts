@@ -265,10 +265,10 @@ const sendJamstockexEmail = async (
   await sendEmail(stripCodeMarkers(combinedHtml), "Daily Jamstockex Report");
 };
 
-export const savePageContent = async (
+export async function savePageContent(
   filename: string,
   content: string
-): Promise<void> => {
+): Promise<void> {
   try {
     const directory = path.join(process.cwd(), "page-content");
     // Ensure directory exists
