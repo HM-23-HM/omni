@@ -37,6 +37,7 @@ async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
     browserInstance = await puppeteer.launch({
       args: ["--no-sandbox", `--proxy-server=${proxyUrl}`],
+      acceptInsecureCerts: true,
     });
   }
   return browserInstance;
@@ -68,7 +69,7 @@ export async function scrape(url: string) {
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     });
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 1200000 });
     const pageContent = await page.content();
     await page.close();
 
