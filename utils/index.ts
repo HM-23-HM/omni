@@ -183,6 +183,9 @@ export const getDailyStockSummaries = async (): Promise<StockData[]> => {
       JSON.stringify(parsedContent)
     );
     stockSummaries.push(parsedContent);
+
+    // Wait for 3 minutes before fetching the next URL
+    await new Promise(resolve => setTimeout(resolve, 1 * 60 * 1000));
   }
   return stockSummaries;
 };
