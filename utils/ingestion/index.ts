@@ -36,7 +36,7 @@ const { host, port } = await getProxy();
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
     browserInstance = await puppeteer.launch({
-      args: ["--no-sandbox", `--proxy-server=http=${host}:${port}`],
+      args: ["--no-sandbox", `--proxy-server=https=${host}:${port}`],
       acceptInsecureCerts: true,
     });
   }
@@ -95,11 +95,13 @@ export async function closeBrowser() {
  */
 export async function fetchHtml(url: string) {
   try {
-    const { host, port } = await getProxy();
+    // const { host, port } = await getProxy();
+    const host = '47.251.122.81'
+    const port = 8888
     log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
       .get(url, {
-        proxy: { host, port, protocol: "http" },
+        proxy: { host, port, protocol: "https" },
       })
       .catch(function (error) {
         log(`An error occurred while fetching the url: ${url} `, true);
@@ -190,7 +192,7 @@ export function separateArticlesByPriority(
 }
 
 export async function getProxyUrl() {
-  const source = "https://hide.mn/en/proxy-list/";
+  const source = "https://hide.mn/en/proxy-list/?type=s#list";
   log("Getting proxy list");
   const { data: html } = await axios.get(source);
   log("Got proxy list");

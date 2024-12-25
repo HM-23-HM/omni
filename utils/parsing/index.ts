@@ -397,10 +397,10 @@ export const getProxyUrls = (): string[] => {
     const port = row.querySelector('td:nth-child(2)')?.textContent?.trim();
     const country = row.querySelector('td:nth-child(3) > span.country')?.textContent?.trim();
     const protocol = row.querySelector('td:nth-child(5)')?.textContent?.trim();
-    if (ip && port && country && protocol === 'HTTP' && /united states/ig.test(country)) {
+    if (ip && port && country && protocol === 'HTTPS') {
       proxyList.push({ ip, port });
     }
   });
 
-  return proxyList.map(proxy => `http://${proxy.ip}:${proxy.port}`);
+  return proxyList.map(proxy => `https://${proxy.ip}:${proxy.port}`);
 };
