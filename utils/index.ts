@@ -157,8 +157,7 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
  * @returns The list of links for the Jamstockex website
  */
 const getJamstockexDailyLinks = async (proxy: Proxy): Promise<ArticleSource[]> => {
-  // const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
-  const url = 'https://www.jamstockex.com/2024/12/24/'
+  const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
   const pageContent = await fetchHtmlWithProxy(url, proxy);
   const parsedData = parseJamStockexDaily(pageContent);
 
