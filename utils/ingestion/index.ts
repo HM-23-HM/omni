@@ -31,12 +31,12 @@ export interface RankedArticle {
 }
 
 let browserInstance: Browser | null = null;
-const { host, port } = await getProxy();
+// const { host, port } = await getProxy();
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
     browserInstance = await puppeteer.launch({
-      args: ["--no-sandbox", `--proxy-server=https=${host}:${port}`],
+      // args: ["--no-sandbox", `--proxy-server=https=${host}:${port}`],
       acceptInsecureCerts: true,
     });
   }
