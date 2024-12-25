@@ -96,12 +96,14 @@ export async function closeBrowser() {
 export async function fetchHtml(url: string) {
   try {
     // const { host, port } = await getProxy();
-    const host = '47.251.122.81'
-    const port = 8888
+    const host = '198.23.239.134'
+    const port = 6540
+    const username = 'pluorpof'
+    const password = 'mx9qt2nvk6lg'
     log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
       .get(url, {
-        proxy: { host, port, protocol: "https" },
+        proxy: { host, port, protocol: "http", auth: { username, password } },
       })
       .catch(function (error) {
         log(`An error occurred while fetching the url: ${url} `, true);
