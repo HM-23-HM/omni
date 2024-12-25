@@ -302,7 +302,7 @@ export const sendDailyNewsReport = async (): Promise<void> => {
 
     log("Email sent successfully");
   } catch (error) {
-    log("Error sending daily news report:" + error, true);
+    log("Error sending daily news report [sendDailyNewsReport]:" + error, true);
     throw error;
   } finally {
     // Clean up
