@@ -21,7 +21,9 @@ import {
   scrapeTopStories,
   separateArticlesByPriority,
   StockData,
-  fetchHtml,
+  fetchHtmlWithProxy,
+  getProxy,
+  Proxy,
 } from "./ingestion/index.ts";
 import {
   newspaperSourceToCleanerFn,
@@ -154,10 +156,10 @@ const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
  * Gets the links for the Jamstockex website
  * @returns The list of links for the Jamstockex website
  */
-const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
+const getJamstockexDailyLinks = async (proxy: Proxy): Promise<ArticleSource[]> => {
   // const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
   const url = 'https://www.jamstockex.com/2024/12/24/'
-  const pageContent = await fetchHtml(url);
+  const pageContent = await fetchHtmlWithProxy(url, proxy);
   const parsedData = parseJamStockexDaily(pageContent);
 
   // Save the parsed data
@@ -170,12 +172,12 @@ const getJamstockexDailyLinks = async (): Promise<ArticleSource[]> => {
   return parsedData;
 };
 
-export const getDailyStockSummaries = async (): Promise<StockData[]> => {
+export const getDailyStockSummaries = async (proxy: Proxy): Promise<StockData[]> => {
   const urls = getDailySourcesToIngest("STOCK");
   log({ urls })
   const stockSummaries: StockData[] = [];
   for (const [index, url] of urls.entries()) {
-    const pageContent = await fetchHtml(url);
+    const pageContent = await fetchHtmlWithProxy(url, proxy);
     await savePageContent(`stock-${index}.html`, pageContent);
     log(" Saved stock summary page content");
     const parsedContent = parseStockData(pageContent);
@@ -315,10 +317,15 @@ export const sendDailyNewsReport = async (): Promise<void> => {
 
 export const sendDailyJamstockexReport = async (): Promise<void> => {
   try {
-    const jamstockexLinks = await getJamstockexDailyLinks();
+
+    log('Getting proxy');
+    const proxy = await getProxy();
+    log('Got proxy: ' + proxy);
+
+    const jamstockexLinks = await getJamstockexDailyLinks(proxy);
     log("Jamstockex links fetched");
 
-    const stockSummaries = await getDailyStockSummaries();
+    const stockSummaries = await getDailyStockSummaries(proxy);
     log("Stock summaries fetched");
 
     await sendJamstockexEmail(jamstockexLinks, stockSummaries);

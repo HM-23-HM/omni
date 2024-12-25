@@ -93,14 +93,14 @@ export async function closeBrowser() {
  * @returns The HTML content
  * @throws An error if the fetch fails
  */
-export async function fetchHtml(url: string) {
+export async function fetchHtmlWithProxy(url: string, proxy: Proxy) {
   try {
-    const { host, port } = await getProxy();
+    const { host, port, username, password } = proxy;
 
     log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
       .get(url, {
-        // proxy: { host, port, protocol: "http", auth: { username, password } },
+        proxy: { host, port, protocol: "http", auth: { username, password } },
       })
       .catch(function (error) {
         log(`An error occurred while fetching the url: ${url} `, true);
@@ -190,20 +190,34 @@ export function separateArticlesByPriority(
   };
 }
 
-export async function getProxyUrl() {
-  const source = "https://hide.mn/en/proxy-list/?type=s#list";
-  log("Getting proxy list");
-  const { data: html } = await axios.get(source);
-  log("Got proxy list");
-  await savePageContent("proxy-list.html", html);
-  log("Saved proxy list");
-  const proxyList = getProxyUrls();
-  log(`Using proxy: ${proxyList[0]}`);
-  return proxyList[0];
+
+export type Proxy = {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
 }
 
-export async function getProxy() {
-  const proxyUrl = await getProxyUrl();
-  const [host, port] = proxyUrl.replace("http://", "").split(":");
-  return { host, port: parseInt(port) };
+export async function getProxy(): Promise<Proxy> {
+  
+  const url = new URL('https://proxy.webshare.io/api/v2/proxy/list/');
+url.searchParams.append('mode', 'direct');
+url.searchParams.append('page', '1');
+url.searchParams.append('page_size', '1');
+
+  const { data } = await axios.get(url.href, {
+    headers: {
+      Authorization: `Token ${process.env.PROXY_API_TOKEN}`
+    }
+  })
+  .catch(error => {
+    log(`An error occurred while fetching the proxy`, true);
+    log(`${error.message}`, true)
+    throw error
+  })
+
+  const { results } = data;
+  const { proxy_address, port, username, password } = results[0];
+
+  return { host: proxy_address, port: parseInt(port), username, password };
 }
