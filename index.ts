@@ -8,9 +8,9 @@ const holidays = [
   '2025-01-01', // New Year's Day
 ];
 
-// Schedule the job to run at 12:00 PM UTC-5 (17:00 UTC)
-// Cron format: minute hour * * *
-cron.schedule('0 12 * * *', async () => {
+// Schedule the job to run at 12:00 PM UTC-5 (17:00 UTC) on Monday, Wednesday, and Friday
+// Cron format: minute hour * * day-of-week (0-6, where 0 is Sunday)
+cron.schedule('0 12 * * 1,3,5', async () => {
   try {
     await sendDailyNewsReport();
     log('Daily news report sent successfully');
