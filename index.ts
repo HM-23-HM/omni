@@ -22,7 +22,7 @@ cron.schedule('0 12 * * 1,3,5', async () => {
 });
 
 
-cron.schedule('30 23 * * 1-5', async () => {
+cron.schedule('30 18 * * 1-5', async () => {
   const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
 
   if (holidays.includes(today)) {
