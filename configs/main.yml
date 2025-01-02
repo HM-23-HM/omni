@@ -3,7 +3,7 @@ FREQUENCY:
     NEWSPAPERS:
      - https://jamaica-gleaner.com/business
      - https://www.jamaicaobserver.com/category/business/
-     - https://icinsider.com/
+    #  - https://icinsider.com/
     JAMSTOCKEX:
     # Headlines and links to other links or short paragraphs. Only scrape links for stocks
     # being monitored
