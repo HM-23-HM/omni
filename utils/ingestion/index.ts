@@ -205,18 +205,45 @@ url.searchParams.append('mode', 'direct');
 url.searchParams.append('page', '1');
 url.searchParams.append('page_size', '1');
 
-  const { data } = await axios.get(url.href, {
-    headers: {
-      Authorization: `Token ${process.env.PROXY_API_TOKEN}`
-    }
-  })
-  .catch(error => {
-    log(`An error occurred while fetching the proxy`, true);
-    log(`${error.message}`, true)
-    throw error
-  })
+  let attempts = 0;
+  const maxAttempts = 3;
+  const retryInterval = 5 * 60 * 1000; // 5 minutes
+  let _data = null;
 
-  const { results } = data;
+  while (attempts < maxAttempts) {
+    try {
+      const { data } = await axios.get(url.href, {
+        headers: {
+          Authorization: `Token ${process.env.PROXY_API_TOKEN}`
+        }
+      });
+      _data = data;
+    } catch (error) {
+      if ((error as any).response && (error as any).response.status >= 400 && (error as any).response.status < 500) {
+        attempts++;
+        if (attempts < maxAttempts) {
+          log(`Retrying to fetch the proxy in 5 minutes... Attempt ${attempts} of ${maxAttempts}`, true);
+          if (error instanceof Error) {
+            log(`${error.message}`, true);
+          } 
+          await new Promise(resolve => setTimeout(resolve, retryInterval));
+        } else {
+          log(`Failed to fetch the proxy after ${maxAttempts} attempts`, true);
+          throw error;
+        }
+      } else {
+        log(`An error occurred while fetching the proxy`, true);
+        if (error instanceof Error) {
+          log(`${error.message}`, true);
+        } else {
+          log(`An unknown error occurred`, true);
+        }
+        throw error;
+      }
+    }
+  }
+
+  const { results } = _data;
   const { proxy_address, port, username, password } = results[0];
 
   return { host: proxy_address, port: parseInt(port), username, password };
