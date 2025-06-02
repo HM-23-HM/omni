@@ -25,15 +25,15 @@ import {
 } from "./utils/types.ts";
 
 const lpTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./templates/lp-section.html`),
+  path.join(process.cwd(), `./src/templates/lp-section.html`),
   "utf8"
 );
 const hpTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./templates/hp-section.html`),
+  path.join(process.cwd(), `./src/templates/hp-section.html`),
   "utf8"
 );
 const stockSummaryTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./templates/daily/stock-summary.html`),
+  path.join(process.cwd(), `./src/templates/daily/stock-summary.html`),
   "utf8"
 );
 
