@@ -4,8 +4,8 @@ import handlebars from "handlebars";
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer/index.js";
 import * as path from "path";
-import { ArticleSource, RankedArticle, StockData } from "../ingestion/index.ts";
-import { log } from "../logging/index.ts";
+import { ArticleSource, RankedArticle, StockData } from "./utils/types.ts";
+import { log } from "./utils/logging.ts";
 
 const lpTemplate = fs.readFileSync(
   path.join(process.cwd(), `./templates/lp-section.html`),

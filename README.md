@@ -18,12 +18,12 @@ Omni is a web service that aggregates news reports and emails you concise summar
 
 - I used a layered folder structure to separate the files based on technical concerns. Here's an overview of how the folders and files are structured:
 
+scripts/               # Post-deployment scripts
 src/
 ├── config/            # API keys, sources
 ├── emailer/           # Email sending
 ├── scheduler/         # Cron jobs
 ├── scraper/           # News aggregation
-├── scripts/           # Post-deployment scripts
 ├── summarizer/        # Gemini API calls
 ├── templates/         # Email templates
 ├── utils/             # Shared utilities

@@ -1,6 +1,6 @@
 import cron from 'node-cron';
-import { sendDailyJamstockexReport, sendDailyNewsReport } from "./utils/index.ts";
-import { log } from './utils/logging/index.ts';
+import { sendDailyJamstockexReport, sendDailyNewsReport } from "./src/utils/index.ts";
+import { log } from './src/utils/logging.ts';
 
 const holidays = [
   '2024-12-25', // Christmas

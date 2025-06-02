@@ -1,48 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { CONFIG_FILE_PATH } from "../constants/index.ts";
-import { log } from "../logging/index.ts";
+import { CONFIG_FILE_PATH } from "../constants.ts";
+import { log } from "../logging.ts";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-export interface Config {
-  FREQUENCY: {
-    DAILY: {
-      NEWSPAPERS: string[];
-      STOCK: string[];
-      JAMSTOCKEX: string[];
-    };
-    DAY_OF_WEEK: {
-      TUESDAY: string[];
-    };
-    WEEKLY: string[];
-    MONTHLY: string[];
-    QUARTERLY: string[];
-  };
-  STOCKS: string[];
-  prompts: {
-    DAILY: {
-      NEWSPAPERS: {
-        ingest: string;
-        summarize?: string;
-      };
-      JAMSTOCKEX: {
-        ingest: string;
-        summarize?: string;
-      };
-      STOCK: {
-        ingest: string;
-        summarize?: string;
-      };
-    };
-  };
-}
 
-type Frequency = "DAILY" | "DAY_OF_WEEK" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
-type SourceType = "NEWSPAPERS" | "JAMSTOCKEX" | "STOCK";
-
-type PromptStage = "ingest" | "summarize";
 
 const fileContents = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
 const config = yaml.load(fileContents) as Config;

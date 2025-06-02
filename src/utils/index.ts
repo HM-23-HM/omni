@@ -5,13 +5,13 @@ import {
   HIGH_PRIORITY_COUNT,
   PAGE_CONTENT_DIR,
   SCRAPED_ARTICLES_DIR,
-} from "./constants/index.ts";
+} from "./constants.ts";
 import {
   generateDailyJamstockexHtml,
   generateDailyNewsHtml,
   generateDailyStockSummaryHtml,
   sendEmail,
-} from "./email/index.ts";
+} from "../email.ts";
 import {
   ArticleSource,
   closeBrowser,
@@ -24,7 +24,7 @@ import {
   fetchHtmlWithProxy,
   getProxy,
   Proxy,
-} from "./ingestion/index.ts";
+} from "../"
 import {
   newspaperSourceToCleanerFn,
   newspaperSourceToHomePageCleanerFn,
@@ -32,8 +32,9 @@ import {
   parseJsonString,
   parseStockData,
   stripCodeMarkers,
-} from "./parsing/index.ts";
-import { log } from "./logging/index.ts";
+} from "./parsing.ts";
+import { log } from "./logging.ts";
+import { ProcessedArticles } from "./types.ts";
 
 /**
  * Generates summaries for the top headlines and returns the list of ranked articles with summaries.
@@ -94,10 +95,7 @@ const clearPageContent = async () => {
   }
 };
 
-interface ProcessedArticles {
-  highPriority: RankedArticle[];
-  lowPriority: RankedArticle[];
-}
+
 
 /**
  * Gathers articles from all configured websites

@@ -1,37 +1,17 @@
 import puppeteer, { Browser } from "puppeteer";
 import * as fsPromises from "fs/promises";
 import * as path from "path";
-import { Config } from "../ai/index.ts";
+import { Config } from "./utils/types.ts";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "../constants/index.ts";
-import { getProxyUrls, populateDateUrl } from "../parsing/index.ts";
-import { log } from "../logging/index.ts";
+import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
+import { getProxyUrls, populateDateUrl } from "./utils/parsing.ts";
+import { log } from "./utils/logging.ts";
 import axios from "axios";
-import { savePageContent } from "../index.ts";
-
-export interface StockData {
-  ticker: string;
-  range: string;
-  volume: number;
-}
-
-export interface ArticleSource {
-  headline: string;
-  link: string;
-}
-
-export interface RankedArticle {
-  source: string;
-  headline: string;
-  link: string;
-  path?: string;
-  priority: number;
-  summary?: string;
-}
+import { savePageContent } from "./utils/index.ts";
+import { RankedArticle } from "./utils/types.ts";
 
 let browserInstance: Browser | null = null;
-// const { host, port } = await getProxy();
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
@@ -190,20 +170,18 @@ export function separateArticlesByPriority(
   };
 }
 
-
 export type Proxy = {
   host: string;
   port: number;
   username: string;
   password: string;
-}
+};
 
 export async function getProxy(): Promise<Proxy> {
-  
-  const url = new URL('https://proxy.webshare.io/api/v2/proxy/list/');
-url.searchParams.append('mode', 'direct');
-url.searchParams.append('page', '1');
-url.searchParams.append('page_size', '1');
+  const url = new URL("https://proxy.webshare.io/api/v2/proxy/list/");
+  url.searchParams.append("mode", "direct");
+  url.searchParams.append("page", "1");
+  url.searchParams.append("page_size", "1");
 
   let attempts = 0;
   const maxAttempts = 3;
@@ -214,19 +192,26 @@ url.searchParams.append('page_size', '1');
     try {
       const { data } = await axios.get(url.href, {
         headers: {
-          Authorization: `Token ${process.env.PROXY_API_TOKEN}`
-        }
+          Authorization: `Token ${process.env.PROXY_API_TOKEN}`,
+        },
       });
       _data = data;
     } catch (error) {
-      if ((error as any).response && (error as any).response.status >= 400 && (error as any).response.status < 500) {
+      if (
+        (error as any).response &&
+        (error as any).response.status >= 400 &&
+        (error as any).response.status < 500
+      ) {
         attempts++;
         if (attempts < maxAttempts) {
-          log(`Retrying to fetch the proxy in 5 minutes... Attempt ${attempts} of ${maxAttempts}`, true);
+          log(
+            `Retrying to fetch the proxy in 5 minutes... Attempt ${attempts} of ${maxAttempts}`,
+            true
+          );
           if (error instanceof Error) {
             log(`${error.message}`, true);
-          } 
-          await new Promise(resolve => setTimeout(resolve, retryInterval));
+          }
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
         } else {
           log(`Failed to fetch the proxy after ${maxAttempts} attempts`, true);
           throw error;
