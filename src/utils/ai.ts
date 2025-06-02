@@ -11,6 +11,7 @@ enum HttpStatus {
   SERVICE_UNAVAILABLE = 503
 }
 
+
 class AIService {
   private static instance: AIService;
   private genAI!: GoogleGenerativeAI;
