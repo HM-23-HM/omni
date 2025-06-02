@@ -12,7 +12,7 @@ import {
   getProxy,
   savePageContent,
 } from "./scraping.ts";
-import { processNewspaperArticles } from "./summarizing.ts";
+import { getClassifiedSummaries } from "./summarizing.ts";
 import { clearPageContent, clearScrapedArticles } from "./utils/cleanup.ts";
 import { EMAIL_CONFIG } from "./utils/constants.ts";
 import { log } from "./utils/logging.ts";
@@ -183,7 +183,7 @@ export const sendJamstockexEmail = async (
 export const sendDailyNewsReport = async (): Promise<void> => {
   try {
     const gatheredArticles = await getNewspaperArticles();
-    const processedArticles = await processNewspaperArticles(gatheredArticles);
+    const processedArticles = await getClassifiedSummaries(gatheredArticles);
     log("Processed articles");
 
     await sendDailyNewsEmail(processedArticles);
