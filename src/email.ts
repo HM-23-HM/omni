@@ -14,6 +14,7 @@ import {
 } from "./scraping.ts";
 import { processNewspaperArticles } from "./summarizing.ts";
 import { clearPageContent, clearScrapedArticles } from "./utils/cleanup.ts";
+import { EMAIL_CONFIG } from "./utils/constants.ts";
 import { log } from "./utils/logging.ts";
 import { stripCodeMarkers } from "./utils/parsing.ts";
 import {
@@ -37,12 +38,12 @@ const stockSummaryTemplate = fs.readFileSync(
 );
 
 const oAuth2Client = new google.auth.OAuth2(
-  process.env.CLIENT_ID,
-  process.env.CLIENT_SECRET,
-  "https://developers.google.com/oauthplayground"
+  EMAIL_CONFIG.CLIENT_ID,
+  EMAIL_CONFIG.CLIENT_SECRET,
+  EMAIL_CONFIG.OAUTH_PLAYGROUND_URL
 );
 oAuth2Client.setCredentials({
-  refresh_token: process.env.OAUTH2_REFRESH_TOKEN,
+  refresh_token: EMAIL_CONFIG.OAUTH2_REFRESH_TOKEN,
 });
 
 const getAccessToken = async (): Promise<string> => {
@@ -97,17 +98,17 @@ export const sendEmail = async (
       service: "gmail",
       auth: {
         type: "OAuth2",
-        user: process.env.EMAIL_USER,
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        refreshToken: process.env.OAUTH2_REFRESH_TOKEN,
+        user: EMAIL_CONFIG.EMAIL_USER,
+        clientId: EMAIL_CONFIG.CLIENT_ID,
+        clientSecret: EMAIL_CONFIG.CLIENT_SECRET,
+        refreshToken: EMAIL_CONFIG.OAUTH2_REFRESH_TOKEN,
         accessToken,
       },
     });
 
     const mailOptions: Mail.Options = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_RECIPIENT,
+      from: EMAIL_CONFIG.EMAIL_USER,
+      to: EMAIL_CONFIG.EMAIL_RECIPIENT,
       subject,
       html,
     };
