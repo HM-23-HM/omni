@@ -10,29 +10,44 @@ import { newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonStri
 import { ArticleSource, Config, HttpProxy, ProcessedArticles, RankedArticle, StockData } from "./utils/types.ts";
 import { aiService } from "./utils/ai.ts";
 
-let browserInstance: Browser | null = null;
+class BrowserService {
+  private static instance: BrowserService | null = null;
+  private browser: Browser | null = null;
 
-async function getBrowser(): Promise<Browser> {
-  if (!browserInstance) {
-    browserInstance = await puppeteer.launch({
-      args: ["--no-sandbox"],
-      acceptInsecureCerts: true,
-    });
+  private constructor() {}
+
+  public static getInstance(): BrowserService {
+    if (!BrowserService.instance) {
+      BrowserService.instance = new BrowserService();
+    }
+    return BrowserService.instance;
   }
-  return browserInstance;
+
+  async getBrowser(): Promise<Browser> {
+    if (!this.browser) {
+      this.browser = await puppeteer.launch({
+        args: ["--no-sandbox"],
+        acceptInsecureCerts: true,
+      });
+    }
+    return this.browser;
+  }
+
+  async closeBrowser(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+    }
+  }
 }
 
-/**
- * Get the HTML full page content from a given URL
- * @param url - The URL to get the full page content from
- * @returns The full page content
- */
-export async function scrape(url: string) {
+const browserService = BrowserService.getInstance();
+
+async function scrape(url: string) {
   try {
-    const browser = await getBrowser();
+    const browser = await browserService.getBrowser();
     const page = await browser.newPage();
 
-    // Set viewport to avoid mobile versions
     await page.setViewport({
       width: 1920,
       height: 1080,
@@ -60,10 +75,7 @@ export async function scrape(url: string) {
 }
 
 export async function closeBrowser() {
-  if (browserInstance) {
-    await browserInstance.close();
-    browserInstance = null;
-  }
+  await browserService.closeBrowser();
 }
 
 /**
@@ -138,8 +150,6 @@ export async function scrapeTopStories(
     throw error;
   }
 }
-
-
 
 /**
  * Get the websites to ingest from the config file
@@ -289,7 +299,6 @@ export const getJamstockexDailyLinks = async (proxy: HttpProxy): Promise<Article
   const pageContent = await fetchHtmlWithProxy(url, proxy);
   const parsedData = parseJamStockexDaily(pageContent);
 
-  // Save the parsed data
   await savePageContent(
     "jamstockex-daily.json",
     JSON.stringify(parsedData, null, 2)
@@ -327,10 +336,8 @@ export async function savePageContent(
 ): Promise<void> {
   try {
     const directory = path.join(process.cwd(), "page-content");
-    // Ensure directory exists
     await fsPromises.mkdir(directory, { recursive: true });
 
-    // Determine file extension based on content type
     const extension = content.trim().startsWith("<") ? ".html" : ".txt";
     const fullFilename = filename.includes(".")
       ? filename
