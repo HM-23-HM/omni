@@ -1,17 +1,17 @@
 import cron from 'node-cron';
 import { sendDailyJamstockexReport, sendDailyNewsReport } from "./src/email.ts";
 import { log } from './src/utils/logging.ts';
-
-const holidays = [
-  '2024-12-25', // Christmas
-  '2024-12-26', // Boxing Day
-  '2025-01-01', // New Year's Day
-];
+import { isHoliday } from './src/utils/holidays.ts';
 
 // Schedule the job to run at 12:00 PM UTC-5 (17:00 UTC) on Monday, Wednesday, and Friday
 // Cron format: minute hour * * day-of-week (0-6, where 0 is Sunday)
 cron.schedule('0 12 * * 1,3,5', async () => {
   try {
+    if (isHoliday()) {
+      log('Today is a holiday. Skipping the daily news report.');
+      return;
+    }
+
     await sendDailyNewsReport();
     log('Daily news report sent successfully');
   } catch (error) {
@@ -23,9 +23,7 @@ cron.schedule('0 12 * * 1,3,5', async () => {
 
 
 cron.schedule('30 18 * * 1-5', async () => {
-  const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-
-  if (holidays.includes(today)) {
+  if (isHoliday()) {
     log('Today is a holiday. Skipping the daily jamstockex report.');
     return;
   }

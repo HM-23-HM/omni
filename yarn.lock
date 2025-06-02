@@ -178,6 +178,11 @@ ast-types@^0.13.4:
   dependencies:
     tslib "^2.0.1"
 
+astronomia@^4.1.0, astronomia@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/astronomia/-/astronomia-4.1.1.tgz#9ad4d3cd1dc8135b7c9e5cee37cb77160ee7af7f"
+  integrity sha512-TcJD9lUC5eAo0/Ji7rnQauX/yQbi0yZWM+JsNr77W3OA5fsrgvuFgubLMFwfw4VlZ29cu9dG/yfJbfvuTSftjg==
+
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz"
@@ -262,6 +267,13 @@ buffer@^5.2.1:
   dependencies:
     base64-js "^1.3.1"
     ieee754 "^1.1.13"
+
+caldate@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/caldate/-/caldate-2.0.5.tgz#570263ce14128668ae2b55f01616c4199936add1"
+  integrity sha512-JndhrUuDuE975KUhFqJaVR1OQkCHZqpOrJur/CFXEIEhWhBMjxO85cRSK8q4FW+B+yyPq6GYua2u4KvNzTcq0w==
+  dependencies:
+    moment-timezone "^0.5.43"
 
 call-bind@^1.0.7:
   version "1.0.7"
@@ -351,6 +363,47 @@ data-urls@^5.0.0:
     whatwg-mimetype "^4.0.0"
     whatwg-url "^14.0.0"
 
+date-bengali-revised@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/date-bengali-revised/-/date-bengali-revised-2.0.2.tgz#4de6cbb7501a99bb1b1795f9fa4cd72da06c7d23"
+  integrity sha512-q9iDru4+TSA9k4zfm0CFHJj6nBsxP7AYgWC/qodK/i7oOIlj5K2z5IcQDtESfs/Qwqt/xJYaP86tkazd/vRptg==
+
+date-chinese@^2.1.4:
+  version "2.1.4"
+  resolved "https://registry.yarnpkg.com/date-chinese/-/date-chinese-2.1.4.tgz#f471af3b72525b6005a16ec4e544a53b28c8e656"
+  integrity sha512-WY+6+Qw92ZGWFvGtStmNQHEYpNa87b8IAQ5T8VKt4wqrn24lBXyyBnWI5jAIyy7h/KVwJZ06bD8l/b7yss82Ww==
+  dependencies:
+    astronomia "^4.1.0"
+
+date-easter@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/date-easter/-/date-easter-1.0.3.tgz#b7e01f2d2b7cabd9451f8dd09377f76b8de46442"
+  integrity sha512-aOViyIgpM4W0OWUiLqivznwTtuMlD/rdUWhc5IatYnplhPiWrLv75cnifaKYhmQwUBLAMWLNG4/9mlLIbXoGBQ==
+
+date-holidays-parser@^3.4.7:
+  version "3.4.7"
+  resolved "https://registry.yarnpkg.com/date-holidays-parser/-/date-holidays-parser-3.4.7.tgz#301b32a83e8ca7b658e7d490a3ca27f2bfdb2c6e"
+  integrity sha512-h09ZEtM6u5cYM6m1bX+1Ny9f+nLO9KVZUKNPEnH7lhbXYTfqZogaGTnhONswGeIJFF91UImIftS3CdM9HLW5oQ==
+  dependencies:
+    astronomia "^4.1.1"
+    caldate "^2.0.5"
+    date-bengali-revised "^2.0.2"
+    date-chinese "^2.1.4"
+    date-easter "^1.0.3"
+    deepmerge "^4.3.1"
+    jalaali-js "^1.2.7"
+    moment-timezone "^0.5.47"
+
+date-holidays@^3.24.3:
+  version "3.24.3"
+  resolved "https://registry.yarnpkg.com/date-holidays/-/date-holidays-3.24.3.tgz#f1db85de8db3601d067b5e2aee23316f2b08b833"
+  integrity sha512-pTRCiwkWZeJwE70q9aezMF+tV8CGRbDtT69Kj0+KaPCo+edFQqCZRYKY8S+bBit2xitjXgNOeJ+vBNNXzJTSMg==
+  dependencies:
+    date-holidays-parser "^3.4.7"
+    js-yaml "^4.1.0"
+    lodash "^4.17.21"
+    prepin "^1.0.3"
+
 debug@4, debug@^4.1.1, debug@^4.3.4, debug@^4.3.6, debug@^4.3.7:
   version "4.3.7"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.7.tgz"
@@ -362,6 +415,11 @@ decimal.js@^10.4.3:
   version "10.4.3"
   resolved "https://registry.npmjs.org/decimal.js/-/decimal.js-10.4.3.tgz"
   integrity sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==
+
+deepmerge@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-4.3.1.tgz#44b5f2147cd3b00d4b56137685966f26fd25dd4a"
+  integrity sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==
 
 define-data-property@^1.1.4:
   version "1.1.4"
@@ -742,6 +800,11 @@ is-stream@^2.0.0:
   resolved "https://registry.npmjs.org/is-stream/-/is-stream-2.0.1.tgz"
   integrity sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==
 
+jalaali-js@^1.2.7:
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/jalaali-js/-/jalaali-js-1.2.8.tgz#dfc80398a0c4b4182f3eb883363b3b621e7a3878"
+  integrity sha512-Jl/EwY84JwjW2wsWqeU4pNd22VNQ7EkjI36bDuLw31wH98WQW4fPjD0+mG7cdCK+Y8D6s9R3zLiQ3LaKu6bD8A==
+
 js-tokens@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
@@ -829,6 +892,11 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
+lodash@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+
 lru-cache@^7.14.1:
   version "7.18.3"
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-7.18.3.tgz"
@@ -860,6 +928,18 @@ mitt@3.0.1:
   version "3.0.1"
   resolved "https://registry.npmjs.org/mitt/-/mitt-3.0.1.tgz"
   integrity sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==
+
+moment-timezone@^0.5.43, moment-timezone@^0.5.47:
+  version "0.5.48"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.48.tgz#111727bb274734a518ae154b5ca589283f058967"
+  integrity sha512-f22b8LV1gbTO2ms2j2z13MuPogNoh5UzxL3nzNAYKGraILnbGc9NEE6dyiiiLv46DGRb8A4kg8UKWLjPthxBHw==
+  dependencies:
+    moment "^2.29.4"
+
+moment@^2.29.4:
+  version "2.30.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.30.1.tgz#f8c91c07b7a786e30c59926df530b4eac96974ae"
+  integrity sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==
 
 ms@^2.1.3:
   version "2.1.3"
@@ -967,6 +1047,11 @@ picocolors@^1.0.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
+
+prepin@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/prepin/-/prepin-1.0.3.tgz#6996d34f1f8bf0de0bacf525e3037da79b7df91b"
+  integrity sha512-0XL2hreherEEvUy0fiaGEfN/ioXFV+JpImqIzQjxk6iBg4jQ2ARKqvC4+BmRD8w/pnpD+lbxvh0Ub+z7yBEjvA==
 
 progress@^2.0.3:
   version "2.0.3"
