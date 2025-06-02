@@ -4,7 +4,7 @@ Omni is a web service that aggregates news reports and emails you concise summar
 
 ## Sample email
 
-[Insert screenshot here]
+![Image](https://github.com/user-attachments/assets/b88a7402-6fbd-458d-8eab-24ced5f43ec9)
 
 ## Tech stack
 
@@ -18,13 +18,18 @@ Omni is a web service that aggregates news reports and emails you concise summar
 
 - I used a layered folder structure to separate the files based on technical concerns. Here's an overview of how the folders and files are structured:
 
-scripts/               # Post-deployment scripts
+scripts/               
 src/
-├── config/            # API keys, sources
-├── emailer/           # Email sending
-├── scraper/           # News aggregation
-├── summarizer/        # Gemini API calls
-├── templates/         # Email templates
-├── utils/             # Shared utilities
-└── index.ts           # Orchestrates everything
+├── utils/
+│   ├── ai.ts
+│   ├── cleanup.ts
+│   ├── constants.ts
+│   ├── holidays.ts
+│   ├── logging.ts
+│   ├── parsing.ts
+│   └── types.ts
+├── templates/
+├── email.ts
+├── scraping.ts
+└── summarizing.ts
 
