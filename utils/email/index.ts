@@ -8,15 +8,15 @@ import { ArticleSource, RankedArticle, StockData } from "../ingestion/index.ts";
 import { log } from "../logging/index.ts";
 
 const lpTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./html-templates/lp-section.html`),
+  path.join(process.cwd(), `./templates/lp-section.html`),
   "utf8"
 );
 const hpTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./html-templates/hp-section.html`),
+  path.join(process.cwd(), `./templates/hp-section.html`),
   "utf8"
 );
 const stockSummaryTemplate = fs.readFileSync(
-  path.join(process.cwd(), `./html-templates/daily/stock-summary.html`),
+  path.join(process.cwd(), `./templates/daily/stock-summary.html`),
   "utf8"
 );
 
