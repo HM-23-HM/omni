@@ -1,21 +1,31 @@
-# Omni
-
-A news summarization service that helps you keep up with current events without the information overload.
-
 ## About
 
-Omni aggregates news from various sources and generates concise summaries. It's designed to help users stay informed while saving time.
+Omni is a web service that aggregates news reports and emails you concise summaries daily so that you can stay informed while saving time.
 
-## Features
+## Sample email
 
-- News aggregation from multiple sources
-- Automated article summarization
+[Insert screenshot here]
 
-
-## Tech Stack
+## Tech stack
 
 - Node.js
+- TypeScript
+- Google Gemini API
 
-## Setup
+## Architectural decisions
 
-[Installation steps coming soon... or never]
+- I chose a monolithic architecture to keep this project easy to deploy, debug and maintain. I'm only one person after all :).
+
+- I used a layered folder structure to separate the files based on technical concerns. Here's an overview of how the folders and files are structured:
+
+src/
+├── config/            # API keys, sources
+├── emailer/           # Email sending
+├── scheduler/         # Cron jobs
+├── scraper/           # News aggregation
+├── scripts/           # Post-deployment scripts
+├── summarizer/        # Gemini API calls
+├── templates/         # Email templates
+├── utils/             # Shared utilities
+└── index.ts           # Orchestrates everything
+
