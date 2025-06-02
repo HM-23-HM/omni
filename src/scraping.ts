@@ -1,15 +1,14 @@
-import puppeteer, { Browser } from "puppeteer";
-import * as fsPromises from "fs/promises";
-import * as path from "path";
-import { Config } from "./utils/types.ts";
-import * as fs from "fs";
-import * as yaml from "js-yaml";
-import { CONFIG_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
-import { getProxyUrls, populateDateUrl } from "./utils/parsing.ts";
-import { log } from "./utils/logging.ts";
 import axios from "axios";
-import { savePageContent } from "./utils/index.ts";
-import { RankedArticle } from "./utils/types.ts";
+import * as fs from "fs";
+import * as fsPromises from "fs/promises";
+import * as yaml from "js-yaml";
+import * as path from "path";
+import puppeteer, { Browser } from "puppeteer";
+import { CONFIG_FILE_PATH, HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
+import { log } from "./utils/logging.ts";
+import { newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, populateDateUrl } from "./utils/parsing.ts";
+import { ArticleSource, Config, HttpProxy, ProcessedArticles, RankedArticle, StockData } from "./utils/types.ts";
+import { aiService } from "./utils/ai.ts";
 
 let browserInstance: Browser | null = null;
 
@@ -73,7 +72,7 @@ export async function closeBrowser() {
  * @returns The HTML content
  * @throws An error if the fetch fails
  */
-export async function fetchHtmlWithProxy(url: string, proxy: Proxy) {
+export async function fetchHtmlWithProxy(url: string, proxy: HttpProxy) {
   try {
     const { host, port, username, password } = proxy;
 
@@ -140,7 +139,7 @@ export async function scrapeTopStories(
   }
 }
 
-export type Frequency = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
+
 
 /**
  * Get the websites to ingest from the config file
@@ -170,14 +169,8 @@ export function separateArticlesByPriority(
   };
 }
 
-export type Proxy = {
-  host: string;
-  port: number;
-  username: string;
-  password: string;
-};
 
-export async function getProxy(): Promise<Proxy> {
+export async function getProxy(): Promise<HttpProxy> {
   const url = new URL("https://proxy.webshare.io/api/v2/proxy/list/");
   url.searchParams.append("mode", "direct");
   url.searchParams.append("page", "1");
@@ -233,3 +226,122 @@ export async function getProxy(): Promise<Proxy> {
 
   return { host: proxy_address, port: parseInt(port), username, password };
 }
+
+/**
+ * Gathers articles from all configured websites
+ * @returns Raw articles separated by priority
+ */
+export const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
+  const websites = getDailySourcesToIngest("NEWSPAPERS");
+  const allHighPriority: RankedArticle[] = [];
+  const allLowPriority: RankedArticle[] = [];
+
+  for (const [index, website] of websites.entries()) {
+    log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
+    let homePageContent = await scrape(website);
+    log(`Home page content length: ${homePageContent.length}`);
+    if (
+      newspaperSourceToHomePageCleanerFn[
+        website as keyof typeof newspaperSourceToHomePageCleanerFn
+      ]
+    ) {
+      log(`Cleaning home page content for ${website}`);
+      homePageContent =
+        newspaperSourceToHomePageCleanerFn[
+          website as keyof typeof newspaperSourceToHomePageCleanerFn
+        ](homePageContent);
+      log(`Cleaned home page content length: ${homePageContent.length}`);
+    }
+    await savePageContent(`${index}-homepage.html`, homePageContent);
+    const llmResponse = await aiService.sendPrompt(
+      "ingest",
+      homePageContent,
+      "NEWSPAPERS",
+      "DAILY"
+    );
+    let rankedArticles: RankedArticle[] = parseJsonString(llmResponse);
+    rankedArticles = rankedArticles.map((article) => ({
+      ...article,
+      source: website,
+    }));
+
+    const { highPriority, lowPriority } = separateArticlesByPriority(
+      rankedArticles,
+      HIGH_PRIORITY_COUNT
+    );
+
+    allHighPriority.push(...highPriority);
+    allLowPriority.push(...lowPriority);
+  }
+
+  return {
+    highPriority: allHighPriority,
+    lowPriority: allLowPriority,
+  };
+};
+
+/**
+ * Gets the links for the Jamstockex website
+ * @returns The list of links for the Jamstockex website
+ */
+export const getJamstockexDailyLinks = async (proxy: HttpProxy): Promise<ArticleSource[]> => {
+  const url = getDailySourcesToIngest("JAMSTOCKEX")[0];
+  const pageContent = await fetchHtmlWithProxy(url, proxy);
+  const parsedData = parseJamStockexDaily(pageContent);
+
+  // Save the parsed data
+  await savePageContent(
+    "jamstockex-daily.json",
+    JSON.stringify(parsedData, null, 2)
+  );
+  log("Saved Jamstockex daily links");
+
+  return parsedData;
+};
+
+export const getDailyStockSummaries = async (proxy: HttpProxy): Promise<StockData[]> => {
+  const urls = getDailySourcesToIngest("STOCK");
+  log({ urls })
+  const stockSummaries: StockData[] = [];
+  for (const [index, url] of urls.entries()) {
+    const pageContent = await fetchHtmlWithProxy(url, proxy);
+    await savePageContent(`stock-${index}.html`, pageContent);
+    log(" Saved stock summary page content");
+    const parsedContent = parseStockData(pageContent);
+    await savePageContent(
+      `stock-${index}-parsed.json`,
+      JSON.stringify(parsedContent)
+    );
+    stockSummaries.push(parsedContent);
+
+    // Wait for 3 minutes before fetching the next URL
+    await new Promise(resolve => setTimeout(resolve, 1 * 60 * 1000));
+  }
+  return stockSummaries;
+};
+
+
+export async function savePageContent(
+  filename: string,
+  content: string
+): Promise<void> {
+  try {
+    const directory = path.join(process.cwd(), "page-content");
+    // Ensure directory exists
+    await fsPromises.mkdir(directory, { recursive: true });
+
+    // Determine file extension based on content type
+    const extension = content.trim().startsWith("<") ? ".html" : ".txt";
+    const fullFilename = filename.includes(".")
+      ? filename
+      : `${filename}${extension}`;
+
+    const filePath = path.join(directory, fullFilename);
+    await fsPromises.writeFile(filePath, content, "utf-8");
+    log(`Saved content to ${filePath}`);
+  } catch (error) {
+    log(`Error saving content to file: ${error}`, true);
+    throw error;
+  }
+};
+

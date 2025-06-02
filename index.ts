@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { sendDailyJamstockexReport, sendDailyNewsReport } from "./src/utils/index.ts";
+import { sendDailyJamstockexReport, sendDailyNewsReport } from "./src/email.ts";
 import { log } from './src/utils/logging.ts';
 
 const holidays = [

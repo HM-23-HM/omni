@@ -31,7 +31,6 @@ export interface Config {
   };
 }
 
-export type Frequency = "DAILY" | "DAY_OF_WEEK" | "WEEKLY" | "MONTHLY" | "QUARTERLY";
 export type SourceType = "NEWSPAPERS" | "JAMSTOCKEX" | "STOCK";
 
 export type PromptStage = "ingest" | "summarize";
@@ -60,3 +59,13 @@ export interface ProcessedArticles {
   highPriority: RankedArticle[];
   lowPriority: RankedArticle[];
 }
+
+export type HttpProxy = {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+};
+
+export type Frequency = "DAILY";
+

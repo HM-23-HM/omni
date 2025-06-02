@@ -22,7 +22,6 @@ scripts/               # Post-deployment scripts
 src/
 ├── config/            # API keys, sources
 ├── emailer/           # Email sending
-├── scheduler/         # Cron jobs
 ├── scraper/           # News aggregation
 ├── summarizer/        # Gemini API calls
 ├── templates/         # Email templates
