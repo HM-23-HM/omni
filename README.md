@@ -18,18 +18,5 @@ Omni is a web service that aggregates news reports and emails you concise summar
 
 - I used a layered folder structure to separate the files based on technical concerns. Here's an overview of how the folders and files are structured:
 
-scripts/               
-src/
-├── utils/
-│   ├── ai.ts
-│   ├── cleanup.ts
-│   ├── constants.ts
-│   ├── holidays.ts
-│   ├── logging.ts
-│   ├── parsing.ts
-│   └── types.ts
-├── templates/
-├── email.ts
-├── scraping.ts
-└── summarizing.ts
+![Image](https://github.com/user-attachments/assets/f98ba660-51f9-4800-a2ba-9651c143c0fe)
 
