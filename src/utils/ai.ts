@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { CONFIG_FILE_PATH, GEMINI_API_KEY, GEMINI_MODEL } from "./constants.ts";
+import { PROMPTS_FILE_PATH, GEMINI_API_KEY, GEMINI_MODEL } from "./constants.ts";
 import { log } from "./logging.ts";
 import { SourceType } from "./types.ts";
-import { Config, PromptStage, Frequency } from "./types.ts";
+import { Prompts, PromptStage, Frequency } from "./types.ts";
 
 enum HttpStatus {
   TOO_MANY_REQUESTS = 429,
@@ -16,12 +16,12 @@ class AIService {
   private static instance: AIService;
   private genAI!: GoogleGenerativeAI;
   private model: any;
-  private config!: Config;
+  private prompts!: Prompts;
   private promptCache: Map<string, string> = new Map();
 
   private constructor() {
     this.initializeAI();
-    this.loadAndValidateConfig();
+    this.loadAndValidatePrompts();
   }
 
   private initializeAI(): void {
@@ -29,21 +29,21 @@ class AIService {
     this.model = this.genAI.getGenerativeModel({ model: GEMINI_MODEL });
   }
 
-  private loadAndValidateConfig(): void {
-    const fileContents = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
-    const loadedConfig = yaml.load(fileContents) as Config;
+  private loadAndValidatePrompts(): void {
+    const fileContents = fs.readFileSync(PROMPTS_FILE_PATH, "utf8");
+    const loadedPrompts = yaml.load(fileContents) as Prompts;
     
-    if (!loadedConfig?.prompts?.DAILY) {
-      throw new Error("Invalid config: missing prompts.DAILY");
+    if (!loadedPrompts?.prompts?.DAILY) {
+      throw new Error("Invalid prompts: missing prompts.DAILY");
     }
     
-    if (!loadedConfig.prompts.DAILY.NEWSPAPERS?.ingest ||
-        !loadedConfig.prompts.DAILY.JAMSTOCKEX?.ingest ||
-        !loadedConfig.prompts.DAILY.STOCK?.ingest) {
-      throw new Error("Invalid config: missing required prompt configurations");
+    if (!loadedPrompts.prompts.DAILY.NEWSPAPERS?.ingest ||
+        !loadedPrompts.prompts.DAILY.JAMSTOCKEX?.ingest ||
+        !loadedPrompts.prompts.DAILY.STOCK?.ingest) {
+      throw new Error("Invalid prompts: missing required prompt configurations");
     }
     
-    this.config = loadedConfig;
+    this.prompts = loadedPrompts;
   }
 
   public static getInstance(): AIService {
@@ -64,7 +64,7 @@ class AIService {
       return this.promptCache.get(cacheKey)!;
     }
 
-    const instruction = this.config.prompts[frequency][type][stage];
+    const instruction = this.prompts.prompts[frequency][type][stage];
     if (!instruction) {
       throw new Error(`Prompt for stage ${stage} not found`);
     }
