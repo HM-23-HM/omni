@@ -130,6 +130,5 @@ dist
 .pnp.*
 
 samples/
-prompts/
 scraped-articles/
 page-content/
