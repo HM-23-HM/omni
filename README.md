@@ -28,6 +28,7 @@ src/
 │   ├── logging.ts
 │   ├── parsing.ts
 │   └── types.ts
+├── prompts/
 ├── templates/
 ├── email.ts
 ├── scraping.ts
