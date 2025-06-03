@@ -4,10 +4,10 @@ import * as fsPromises from "fs/promises";
 import * as yaml from "js-yaml";
 import * as path from "path";
 import puppeteer, { Browser } from "puppeteer";
-import { CONFIG_FILE_PATH, HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
+import { PROMPTS_FILE_PATH, HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
 import { log } from "./utils/logging.ts";
 import { newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, populateDateUrl } from "./utils/parsing.ts";
-import { ArticleSource, Config, HttpProxy, ProcessedArticles, RankedArticle, StockData } from "./utils/types.ts";
+import { ArticleSource, Prompts, HttpProxy, ProcessedArticles, RankedArticle, StockData } from "./utils/types.ts";
 import { aiService } from "./utils/ai.ts";
 
 class BrowserService {
@@ -152,14 +152,14 @@ export async function scrapeTopStories(
 }
 
 /**
- * Get the websites to ingest from the config file
+ * Get the websites to ingest from the prompts file
  * @returns The list of websites to ingest
  */
 export const getDailySourcesToIngest = (
   type: "NEWSPAPERS" | "STOCK" | "JAMSTOCKEX" = "NEWSPAPERS"
 ) => {
-  const config = yaml.load(fs.readFileSync(CONFIG_FILE_PATH, "utf8")) as Config;
-  return config.FREQUENCY.DAILY[type].map(populateDateUrl);
+  const prompts = yaml.load(fs.readFileSync(PROMPTS_FILE_PATH, "utf8")) as Prompts;
+  return prompts.FREQUENCY.DAILY[type].map(populateDateUrl);
 };
 
 export function separateArticlesByPriority(
@@ -238,7 +238,7 @@ export async function getProxy(): Promise<HttpProxy> {
 }
 
 /**
- * Gathers articles from all configured websites
+ * Gathers articles from all listed websites
  * @returns Raw articles separated by priority
  */
 export const getNewspaperArticles = async (): Promise<ProcessedArticles> => {

@@ -1,4 +1,4 @@
-export interface Config {
+export interface Prompts {
   FREQUENCY: {
     DAILY: {
       NEWSPAPERS: string[];
