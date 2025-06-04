@@ -1,5 +1,5 @@
-import { sendDailyNewsReport } from "../src/email.ts";
-import { log } from "../src/utils/logging.ts";
+import { sendDailyNewsReport } from "../src/email.js";
+import { logger } from "../src/utils/logging.js";
 
-log("Manually sending news report");
-await sendDailyNewsReport();
+logger.log("Manually sending news report");
+sendDailyNewsReport();

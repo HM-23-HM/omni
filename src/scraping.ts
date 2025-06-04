@@ -4,11 +4,24 @@ import * as fsPromises from "fs/promises";
 import * as yaml from "js-yaml";
 import * as path from "path";
 import puppeteer, { Browser } from "puppeteer";
-import { PROMPTS_FILE_PATH, HIGH_PRIORITY_COUNT, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
-import { log } from "./utils/logging.ts";
-import { newspaperSourceToHomePageCleanerFn, parseJamStockexDaily, parseJsonString, parseStockData, populateDateUrl } from "./utils/parsing.ts";
-import { ArticleSource, Prompts, HttpProxy, ProcessedArticles, RankedArticle, StockData } from "./utils/types.ts";
 import { aiService } from "./utils/ai.ts";
+import { HIGH_PRIORITY_COUNT, PROMPTS_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
+import { logger } from "./utils/logging.js";
+import {
+  newspaperSourceToHomePageCleanerFn,
+  parseJamStockexDaily,
+  parseJsonString,
+  parseStockData,
+  populateDateUrl
+} from "./utils/parsing.ts";
+import {
+  ArticleSource,
+  HttpProxy,
+  ProcessedArticles,
+  Prompts,
+  RankedArticle,
+  StockData
+} from "./utils/types.ts";
 
 class BrowserService {
   private static instance: BrowserService | null = null;
@@ -69,7 +82,7 @@ async function scrape(url: string) {
 
     return pageContent;
   } catch (error) {
-    log(`An error occurred while scraping the url: ${error}`, true);
+    logger.error(`An error occurred while scraping the url: ${error}`);
     throw error;
   }
 }
@@ -88,19 +101,19 @@ export async function fetchHtmlWithProxy(url: string, proxy: HttpProxy) {
   try {
     const { host, port, username, password } = proxy;
 
-    log(`Fetching html from ${url} with proxy: ${host}:${port}`);
+    logger.log(`Fetching html from ${url} with proxy: ${host}:${port}`);
     const { data: html } = await axios
       .get(url, {
         proxy: { host, port, protocol: "http", auth: { username, password } },
       })
       .catch(function (error) {
-        log(`An error occurred while fetching the url: ${url} `, true);
-        log(error.message, true);
+        logger.error(`An error occurred while fetching the url: ${url} `);
+        logger.error(error.message);
         throw error;
       });
     return html;
   } catch (error) {
-    log(`An error occurred while fetching the url`, true);
+    logger.error(`An error occurred while fetching the url`);
     throw error;
   }
 }
@@ -136,17 +149,17 @@ export async function scrapeTopStories(
         });
         await fsPromises.writeFile(filePath, content, "utf-8");
 
-        log(`Successfully scraped: ${headline.headline}`);
+        logger.log(`Successfully scraped: ${headline.headline}`);
       } catch (error) {
-        log(`Failed to scrape ${headline.headline}: ` + error, true);
-        log(error, true);
+        logger.error(`Failed to scrape ${headline.headline}: ` + error);
+        logger.error(error);
       }
     });
 
     await Promise.all(scrapePromises);
     return headlinesWithPaths;
   } catch (error) {
-    log("Error in scrapeTopStories: " + error, true);
+    logger.error("Error in scrapeTopStories: " + error);
     throw error;
   }
 }
@@ -179,63 +192,56 @@ export function separateArticlesByPriority(
   };
 }
 
-
-export async function getProxy(): Promise<HttpProxy> {
-  const url = new URL("https://proxy.webshare.io/api/v2/proxy/list/");
-  url.searchParams.append("mode", "direct");
-  url.searchParams.append("page", "1");
-  url.searchParams.append("page_size", "1");
-
-  let attempts = 0;
+export const getProxy = async (): Promise<HttpProxy> => {
   const maxAttempts = 3;
+  let attempts = 0;
   const retryInterval = 5 * 60 * 1000; // 5 minutes
-  let _data = null;
 
   while (attempts < maxAttempts) {
     try {
+      const url = new URL("https://proxy.webshare.io/api/v2/proxy/list/");
+      url.searchParams.append("mode", "direct");
+      url.searchParams.append("page", "1");
+      url.searchParams.append("page_size", "1");
+
       const { data } = await axios.get(url.href, {
         headers: {
           Authorization: `Token ${process.env.PROXY_API_TOKEN}`,
         },
       });
-      _data = data;
+      const { results } = data;
+      const { proxy_address, port, username, password } = results[0];
+
+      return { host: proxy_address, port, username, password };
     } catch (error) {
-      if (
-        (error as any).response &&
-        (error as any).response.status >= 400 &&
-        (error as any).response.status < 500
-      ) {
-        attempts++;
-        if (attempts < maxAttempts) {
-          log(
-            `Retrying to fetch the proxy in 5 minutes... Attempt ${attempts} of ${maxAttempts}`,
-            true
-          );
-          if (error instanceof Error) {
-            log(`${error.message}`, true);
-          }
-          await new Promise((resolve) => setTimeout(resolve, retryInterval));
-        } else {
-          log(`Failed to fetch the proxy after ${maxAttempts} attempts`, true);
-          throw error;
-        }
-      } else {
-        log(`An error occurred while fetching the proxy`, true);
+      attempts++;
+      if (attempts < maxAttempts) {
+        logger.log(
+          `Retrying to fetch the proxy in 5 minutes... Attempt ${attempts} of ${maxAttempts}`
+        );
         if (error instanceof Error) {
-          log(`${error.message}`, true);
-        } else {
-          log(`An unknown error occurred`, true);
+          logger.error(error.message);
         }
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      } else {
+        logger.error(`Failed to fetch the proxy after ${maxAttempts} attempts`);
         throw error;
       }
     }
   }
 
-  const { results } = _data;
-  const { proxy_address, port, username, password } = results[0];
-
-  return { host: proxy_address, port: parseInt(port), username, password };
-}
+  try {
+    throw new Error("No working proxy found");
+  } catch (error) {
+    logger.error(`An error occurred while fetching the proxy`);
+    if (error instanceof Error) {
+      logger.error(error.message);
+    } else {
+      logger.error(`An unknown error occurred`);
+    }
+    throw error;
+  }
+};
 
 /**
  * Gathers articles from all listed websites
@@ -247,20 +253,20 @@ export const getNewspaperArticles = async (): Promise<ProcessedArticles> => {
   const allLowPriority: RankedArticle[] = [];
 
   for (const [index, website] of websites.entries()) {
-    log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
+    logger.log(`Ingesting index ${index} of ${websites.length - 1}: ${website}`);
     let homePageContent = await scrape(website);
-    log(`Home page content length: ${homePageContent.length}`);
+    logger.log(`Home page content length: ${homePageContent.length}`);
     if (
       newspaperSourceToHomePageCleanerFn[
         website as keyof typeof newspaperSourceToHomePageCleanerFn
       ]
     ) {
-      log(`Cleaning home page content for ${website}`);
+      logger.log(`Cleaning home page content for ${website}`);
       homePageContent =
         newspaperSourceToHomePageCleanerFn[
           website as keyof typeof newspaperSourceToHomePageCleanerFn
         ](homePageContent);
-      log(`Cleaned home page content length: ${homePageContent.length}`);
+      logger.log(`Cleaned home page content length: ${homePageContent.length}`);
     }
     await savePageContent(`${index}-homepage.html`, homePageContent);
     const llmResponse = await aiService.sendPrompt(
@@ -303,19 +309,19 @@ export const getJamstockexDailyLinks = async (proxy: HttpProxy): Promise<Article
     "jamstockex-daily.json",
     JSON.stringify(parsedData, null, 2)
   );
-  log("Saved Jamstockex daily links");
+  logger.log("Saved Jamstockex daily links");
 
   return parsedData;
 };
 
 export const getDailyStockSummaries = async (proxy: HttpProxy): Promise<StockData[]> => {
   const urls = getDailySourcesToIngest("STOCK");
-  log({ urls })
+  logger.log({ urls })
   const stockSummaries: StockData[] = [];
   for (const [index, url] of urls.entries()) {
     const pageContent = await fetchHtmlWithProxy(url, proxy);
     await savePageContent(`stock-${index}.html`, pageContent);
-    log(" Saved stock summary page content");
+    logger.log("Saved stock summary page content");
     const parsedContent = parseStockData(pageContent);
     await savePageContent(
       `stock-${index}-parsed.json`,
@@ -328,7 +334,6 @@ export const getDailyStockSummaries = async (proxy: HttpProxy): Promise<StockDat
   }
   return stockSummaries;
 };
-
 
 export async function savePageContent(
   filename: string,
@@ -345,9 +350,9 @@ export async function savePageContent(
 
     const filePath = path.join(directory, fullFilename);
     await fsPromises.writeFile(filePath, content, "utf-8");
-    log(`Saved content to ${filePath}`);
+    logger.log(`Saved content to ${filePath}`);
   } catch (error) {
-    log(`Error saving content to file: ${error}`, true);
+    logger.error(`Error saving content to file: ${error}`);
     throw error;
   }
 };

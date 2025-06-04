@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom';
 import { ArticleSource, StockData } from './types.ts';
-import { log } from './logging.ts';
+import { logger } from './logging.ts';
 import fs from 'fs';
 
 export function parseJsonString(input: string) {
@@ -16,7 +16,7 @@ export function parseJsonString(input: string) {
     const parsedJson = JSON.parse(jsonMatch[1]);
     return parsedJson;
   } catch (error) {
-    log("Error parsing JSON: " + error, true);
+    logger.error("Error parsing JSON: " + error);
     throw new Error("Invalid JSON string");
   }
 }
