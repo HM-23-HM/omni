@@ -6,7 +6,7 @@ import * as path from "path";
 import { aiService } from "./services/AIService.ts";
 import { browserService } from "./services/browserService.js";
 import { HIGH_PRIORITY_COUNT, PROMPTS_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
-import { logger } from "./utils/logging.ts";
+import { logger } from "./services/logger.ts";
 import {
   newspaperSourceToHomePageCleanerFn,
   parseJamStockexDaily,

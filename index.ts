@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { sendDailyNewsReport } from "./src/email.ts";
 import { isHoliday } from './src/utils/holidays.ts';
-import { logger } from './src/utils/logging.js';
+import { logger } from './src/services/logger.ts';
 
 // Schedule the job to run at 12:00 PM UTC-5 (17:00 UTC) on Monday, Wednesday, and Friday
 // Cron format: minute hour * * day-of-week (0-6, where 0 is Sunday)

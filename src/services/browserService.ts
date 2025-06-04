@@ -1,5 +1,5 @@
 import puppeteer, { Browser } from "puppeteer";
-import { logger } from "../utils/logging.js";
+import { logger } from "../services/logger.ts";
 
 class BrowserService {
   private static instance: BrowserService | null = null;

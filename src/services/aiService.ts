@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { GEMINI_API_KEY, GEMINI_MODEL, PROMPTS_FILE_PATH } from "../utils/constants.ts";
-import { logger } from "../utils/logging.ts";
+import { logger } from "../services/logger.ts";
 import {
   Frequency,
   Prompts,

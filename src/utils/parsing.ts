@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom';
 import { ArticleSource, StockData } from './types.ts';
-import { logger } from './logging.ts';
+import { logger } from '../services/logger.ts';
 import fs from 'fs';
 
 export function parseJsonString(input: string) {

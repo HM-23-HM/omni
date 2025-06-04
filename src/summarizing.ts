@@ -1,7 +1,7 @@
 import * as fsPromises from "fs/promises";
 import { scrapeTopStories } from "./scraping.ts";
 import { aiService } from "./services/AIService.ts";
-import { logger } from "./utils/logging.ts";
+import { logger } from "./services/logger.ts";
 import { newspaperSourceToCleanerFn } from "./utils/parsing.ts";
 import { ProcessedArticles, RankedArticle } from "./utils/types.ts";
 

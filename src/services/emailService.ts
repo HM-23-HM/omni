@@ -15,7 +15,7 @@ import {
 import { getClassifiedSummaries } from "../summarizing.ts";
 import { clearPageContent, clearScrapedArticles } from "../utils/cleanup.ts";
 import { EMAIL_CONFIG } from "../utils/constants.ts";
-import { logger } from "../utils/logging.ts";
+import { logger } from "../services/logger.ts";
 import { stripCodeMarkers } from "../utils/parsing.ts";
 import {
   ArticleSource,

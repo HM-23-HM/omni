@@ -1,7 +1,7 @@
 import { PAGE_CONTENT_DIR } from "./constants.ts";
 import { SCRAPED_ARTICLES_DIR } from "./constants.ts";
 import path from "path";
-import { logger } from "./logging.ts";
+import { logger } from "../services/logger.ts";
 import * as fsPromises from "fs/promises";
 
 export const clearScrapedArticles = async () => {
