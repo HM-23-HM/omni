@@ -1,7 +1,7 @@
 import * as fsPromises from "fs/promises";
 import { scrapeTopStories } from "./scraping.ts";
-import { aiService } from "./utils/ai.ts";
-import { log } from "./utils/logging.ts";
+import { aiService } from "./services/aiService.ts";
+import { logger } from "./services/logger.ts";
 import { newspaperSourceToCleanerFn } from "./utils/parsing.ts";
 import { ProcessedArticles, RankedArticle } from "./utils/types.ts";
 
@@ -68,7 +68,7 @@ export const getClassifiedSummaries = async (
       lowPriority: articles.lowPriority,
     };
   } catch (error) {
-    log(`Failed to classify summaries: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
+    logger.error(`Failed to classify summaries: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 };

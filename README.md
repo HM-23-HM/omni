@@ -16,21 +16,23 @@ Omni is a web service that aggregates news reports and emails you concise summar
 
 - I chose a monolithic architecture to keep this project easy to deploy, debug and maintain. I'm only one person after all :).
 
-- I used a layered folder structure to separate the files based on technical concerns. Here's an overview of how the folders and files are structured:
+- I used a layered file structure to separate the files based on technical concerns. Here's an overview:
 
 ```
 src/
+├── services/
+│   ├── aiService.ts
+│   ├── browserService.ts
+│   ├── emailService.ts
+│   └── logger.ts
 ├── utils/
-│   ├── ai.ts
 │   ├── cleanup.ts
 │   ├── constants.ts
 │   ├── holidays.ts
-│   ├── logging.ts
 │   ├── parsing.ts
 │   └── types.ts
-├── prompts/
 ├── templates/
-├── email.ts
+├── prompts/
 ├── scraping.ts
 └── summarizing.ts
 ```

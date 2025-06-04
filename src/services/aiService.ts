@@ -1,16 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { PROMPTS_FILE_PATH, GEMINI_API_KEY, GEMINI_MODEL } from "./constants.ts";
-import { log } from "./logging.ts";
-import { SourceType } from "./types.ts";
-import { Prompts, PromptStage, Frequency } from "./types.ts";
+import { GEMINI_API_KEY, GEMINI_MODEL, PROMPTS_FILE_PATH } from "../utils/constants.ts";
+import { logger } from "../services/logger.ts";
+import {
+  Frequency,
+  Prompts,
+  PromptStage,
+  SourceType
+} from "../utils/types.ts";
 
 enum HttpStatus {
+  OK = 200,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  NOT_FOUND = 404,
+  INTERNAL_SERVER_ERROR = 500,
   TOO_MANY_REQUESTS = 429,
   SERVICE_UNAVAILABLE = 503
 }
-
 
 class AIService {
   private static instance: AIService;
@@ -90,28 +98,27 @@ class AIService {
     waitFor: number = 10,
     maxRetries: number = 3
   ): Promise<string> {
-    log({ length: content.length, stage, type, frequency });
+    logger.log({ length: content.length, stage, type, frequency });
     const prompt = this.buildPrompt(stage, content, type, frequency);
     let attempts = 0;
 
     while (attempts < maxRetries) {
       try {
         if (attempts > 0) {
-          log(`Retrying...`);
+          logger.log(`Retrying...`);
         }
         const result = await this.model.generateContent(prompt);
         return result.response.text();
       } catch (err: any) {
         if (err.status === HttpStatus.TOO_MANY_REQUESTS || err.status === HttpStatus.SERVICE_UNAVAILABLE) {
           attempts++;
-          log(err, true);
-          log(
-            `${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`,
-            true
+          logger.error(err);
+          logger.error(
+            `${err.status} Error. Attempt ${attempts} of ${maxRetries}. Retrying in ${waitFor} minutes...`
           );
           await new Promise((resolve) => setTimeout(resolve, waitFor * 60 * 1000));
         } else {
-          log(err, true);
+          logger.error(err);
           throw err;
         }
       }
