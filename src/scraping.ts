@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 import * as yaml from "js-yaml";
 import * as path from "path";
-import { aiService } from "./services/AIService.ts";
+import { aiService } from "./services/aiService.ts";
 import { browserService } from "./services/browserService.js";
 import { HIGH_PRIORITY_COUNT, PROMPTS_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
 import { logger } from "./services/logger.ts";
