@@ -4,7 +4,7 @@ import * as fsPromises from "fs/promises";
 import * as yaml from "js-yaml";
 import * as path from "path";
 import puppeteer, { Browser } from "puppeteer";
-import { aiService } from "./services/AI.ts";
+import { aiService } from "./services/AIService.ts";
 import { HIGH_PRIORITY_COUNT, PROMPTS_FILE_PATH, SCRAPED_ARTICLES_DIR } from "./utils/constants.ts";
 import { logger } from "./utils/logging.ts";
 import {

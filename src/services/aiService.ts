@@ -1,14 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { GEMINI_API_KEY, GEMINI_MODEL, PROMPTS_FILE_PATH } from "../utils/constants.js";
-import { logger } from "../utils/logging.js";
+import { GEMINI_API_KEY, GEMINI_MODEL, PROMPTS_FILE_PATH } from "../utils/constants.ts";
+import { logger } from "../utils/logging.ts";
 import {
   Frequency,
   Prompts,
   PromptStage,
   SourceType
-} from "../utils/types.js";
+} from "../utils/types.ts";
 
 enum HttpStatus {
   OK = 200,
