@@ -1,8 +1,9 @@
+// ecosystem.config.cjs
 module.exports = {
   apps: [{
     name: "omni",
-    script: "npx",
-    args: "tsx index.ts",
-    interpreter: "none"
+    script: "tsx",
+    args: "index.ts",
+    interpreter: "node"
   }]
 }
