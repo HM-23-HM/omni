@@ -1,7 +1,8 @@
 module.exports = {
   apps: [{
     name: "omni",
-    script: "/usr/bin/yarn",
-    args: "start",
+    script: "npx",
+    args: "tsx index.ts",
+    interpreter: "none"
   }]
 }
