@@ -1,8 +1,7 @@
 import * as fs from "fs";
-import { google } from "googleapis";
+import { google, gmail_v1 } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
 import handlebars from "handlebars";
-import nodemailer from "nodemailer";
-import Mail from "nodemailer/lib/mailer/index.js";
 import * as path from "path";
 import {
   closeBrowser,
@@ -27,10 +26,12 @@ import {
 /**
  * A singleton service that handles all email-related operations including
  * template management, email sending, and report generation.
+ * Uses Gmail API instead of SMTP to bypass DigitalOcean port blocking.
  */
 class EmailService {
   private static instance: EmailService;
-  private oAuth2Client: any;
+  private oAuth2Client!: OAuth2Client;
+  private gmail!: gmail_v1.Gmail;
   private templates: {
     lp: string;
     hp: string;
@@ -42,7 +43,7 @@ class EmailService {
   };
 
   private constructor() {
-    this.initializeOAuth();
+    this.initializeGmail();
     this.loadTemplates();
   }
 
@@ -53,7 +54,7 @@ class EmailService {
     return EmailService.instance;
   }
 
-  private initializeOAuth() {
+  private initializeGmail() {
     this.oAuth2Client = new google.auth.OAuth2(
       EMAIL_CONFIG.CLIENT_ID,
       EMAIL_CONFIG.CLIENT_SECRET,
@@ -62,6 +63,8 @@ class EmailService {
     this.oAuth2Client.setCredentials({
       refresh_token: EMAIL_CONFIG.OAUTH2_REFRESH_TOKEN,
     });
+    
+    this.gmail = google.gmail({ version: 'v1', auth: this.oAuth2Client });
   }
 
   private loadTemplates() {
@@ -79,19 +82,6 @@ class EmailService {
         "utf8"
       ),
     };
-  }
-
-  private async getAccessToken(): Promise<string> {
-    try {
-      const { token } = await this.oAuth2Client.getAccessToken();
-      if (!token) {
-        throw new Error("Failed to obtain access token");
-      }
-      return token;
-    } catch (error) {
-      logger.error("Error getting access token: " + error);
-      throw error;
-    }
   }
 
   public generateDailyNewsHtml(
@@ -113,6 +103,29 @@ class EmailService {
     return compiledTemplate({ sections });
   }
 
+  /**
+   * Creates a raw email message in the format required by Gmail API
+   */
+  private createRawMessage(
+    to: string,
+    from: string,
+    subject: string,
+    htmlBody: string
+  ): string {
+    const messageParts = [
+      `To: ${to}`,
+      `From: ${from}`,
+      `Subject: ${subject}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      '',
+      htmlBody
+    ];
+    
+    const message = messageParts.join('\n');
+    return Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
   public async sendEmail(
     html: string,
     subject: string = "Daily Report",
@@ -122,27 +135,21 @@ class EmailService {
 
     while (attempts < maxRetries) {
       try {
-        const accessToken = await this.getAccessToken();
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            type: "OAuth2",
-            user: EMAIL_CONFIG.EMAIL_USER,
-            clientId: EMAIL_CONFIG.CLIENT_ID,
-            clientSecret: EMAIL_CONFIG.CLIENT_SECRET,
-            refreshToken: EMAIL_CONFIG.OAUTH2_REFRESH_TOKEN,
-            accessToken,
-          },
+        const rawMessage = this.createRawMessage(
+          EMAIL_CONFIG.EMAIL_RECIPIENT,
+          EMAIL_CONFIG.EMAIL_USER,
+          subject,
+          html
+        );
+
+        await this.gmail.users.messages.send({
+          userId: 'me',
+          requestBody: {
+            raw: rawMessage
+          }
         });
 
-        const mailOptions: Mail.Options = {
-          from: EMAIL_CONFIG.EMAIL_USER,
-          to: EMAIL_CONFIG.EMAIL_RECIPIENT,
-          subject,
-          html,
-        };
-
-        await transporter.sendMail(mailOptions);
+        logger.log(`Email sent successfully: ${subject}`);
         return;
       } catch (error) {
         attempts++;
